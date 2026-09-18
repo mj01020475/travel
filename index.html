@@ -573,6 +573,431 @@ line-height: 28px;
 .leaflet-num-marker.day5 { background: #0d9488; }   
 .leaflet-num-marker.day6 { background: #ea580c; }   
   
+
+/* ========================================================= */
+/* 🗓️ Travel Calendar & 3-Line Spatial Continuous Styles       */
+/* ========================================================= */
+.calendar-section {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: 18px;
+  padding: 18px 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+@media (max-width: 600px) {
+  .calendar-section {
+    padding: 14px 6px;
+    border-radius: 14px;
+  }
+}
+.calendar-header {
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+.calendar-header h3 {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.calendar-header p {
+  font-size: 0.86rem;
+  color: var(--text-sub);
+  line-height: 1.45;
+}
+.cal-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.cal-tab-btn {
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  border: 1.5px solid var(--border-color);
+  background: #f8fafc;
+  color: var(--text-sub);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.cal-tab-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+}
+.cal-tab-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3);
+}
+.cal-month-title {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #1e293b;
+  margin: 10px 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.cal-month-title:first-child {
+  margin-top: 0;
+}
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #475569;
+  margin-bottom: 6px;
+  padding: 6px 0;
+  border-bottom: 2px solid #e2e8f0;
+}
+.cal-weekdays span:first-child { color: #ef4444; }
+.cal-weekdays span:last-child { color: #0284c7; }
+.cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+@media (max-width: 600px) {
+  .cal-weekdays { gap: 3px; font-size: 0.78rem; padding: 4px 0; }
+  .cal-days-grid { gap: 3px; }
+}
+
+/* Enlarged 3-Line Cell Styling */
+.cal-cell {
+  border-radius: 10px;
+  padding: 6px 4px 5px 4px;
+  min-height: clamp(98px, 14.8vh, 116px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+}
+@media (max-width: 600px) {
+  .cal-cell {
+    padding: 5px 2px 4px 2px;
+    min-height: clamp(92px, 14vh, 108px);
+    border-radius: 8px;
+  }
+}
+.cal-cell.inactive {
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  opacity: 0.35;
+  cursor: default;
+}
+.cal-cell.inactive .cal-date-num {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.cal-cell.trip-day {
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+.cal-cell.trip-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+  border-color: var(--primary);
+}
+.cal-cell.trip-day.selected {
+  border: 2.5px solid var(--primary);
+  background: #f0f9ff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.28), 0 6px 16px rgba(2, 132, 199, 0.2);
+  transform: translateY(-2px);
+}
+.cal-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 2px;
+}
+.cal-date-num {
+  font-size: clamp(1rem, 3.4vw, 1.2rem);
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+}
+.cal-day-badge {
+  font-size: clamp(0.66rem, 2.2vw, 0.78rem);
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 5px;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+}
+
+/* 3-Line Spatial Layout Inside Cell */
+.cal-slots-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  margin-top: 4px;
+  gap: 3px;
+  width: 100%;
+}
+.cal-slot-line1, .cal-slot-line2 {
+  min-height: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+.cal-slot-line3 {
+  min-height: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: clamp(0.68rem, 2.3vw, 0.82rem);
+  font-weight: 800;
+  color: #334155;
+  letter-spacing: -0.4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 600px) {
+  .cal-slot-line1, .cal-slot-line2 { min-height: 20px; height: 20px; }
+  .cal-slot-line3 { min-height: 16px; height: 16px; font-size: 0.65rem; }
+  .cal-slots-container { gap: 2px; }
+}
+
+/* Continuous City Pill / Line */
+.cal-city-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.68rem, 2.3vw, 0.82rem);
+  font-weight: 900;
+  height: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  text-align: center;
+  padding: 0 4px;
+  letter-spacing: -0.4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+@media (max-width: 600px) {
+  .cal-city-pill { font-size: 0.64rem; padding: 0 2px; }
+}
+
+/* Horizontal Continuity Rules Across Cell Gaps */
+.cal-city-pill.pill-start {
+  border-radius: 6px 0 0 6px;
+  margin-right: -5px;
+  width: calc(100% + 5px);
+  z-index: 1;
+}
+.cal-city-pill.pill-mid {
+  border-radius: 0;
+  margin-left: -5px;
+  margin-right: -5px;
+  width: calc(100% + 10px);
+  z-index: 2;
+}
+.cal-city-pill.pill-end {
+  border-radius: 0 6px 6px 0;
+  margin-left: -5px;
+  width: calc(100% + 5px);
+  z-index: 1;
+}
+.cal-city-pill.pill-single {
+  border-radius: 6px;
+  width: 100%;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .cal-city-pill.pill-start { margin-right: -4px; width: calc(100% + 4px); }
+  .cal-city-pill.pill-mid { margin-left: -4px; margin-right: -4px; width: calc(100% + 8px); }
+  .cal-city-pill.pill-end { margin-left: -4px; width: calc(100% + 4px); }
+}
+
+/* City Palette (Matching the Screenshot aesthetic) */
+.pill-lisbon { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+.pill-porto { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.pill-tossa { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+.pill-bcn { background: #fae8ff; color: #86198f; border: 1px solid #f5d0fe; }
+.pill-bcn2 { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+.pill-granada { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.pill-doha { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.pill-incheon { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+
+/* Calendar Summary Card */
+.calendar-detail-card {
+  background: #ffffff;
+  border: 2px solid #0284c7;
+  border-radius: 16px;
+  padding: 18px 16px;
+  margin-top: 18px;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.1);
+  animation: fadeIn 0.25s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.detail-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.detail-day-tag {
+  font-size: 0.92rem;
+  font-weight: 900;
+  padding: 5px 12px;
+  border-radius: 20px;
+  color: white;
+  background: var(--primary);
+}
+.detail-region-tag {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.detail-card-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+.detail-section-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.section-label {
+  font-size: 0.84rem;
+  font-weight: 900;
+  color: #334155;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.attractions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.attraction-pill {
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.activities-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 0.9rem;
+  color: #334155;
+  line-height: 1.55;
+}
+.activities-list li {
+  padding-left: 20px;
+  position: relative;
+}
+.activities-list li::before {
+  content: '•';
+  position: absolute;
+  left: 5px;
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+.detail-meta-text {
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.55;
+}
+.mother-care-box {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+  color: #166534;
+  line-height: 1.5;
+}
+.detail-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.btn-go-detail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  font-size: 1rem;
+  font-weight: 900;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+  transition: all 0.2s ease;
+}
+.btn-go-detail:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.32);
+}
+.btn-go-detail.secondary-btn {
+  background: linear-gradient(135deg, #475569, #334155);
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.2);
+}
+.btn-go-detail.secondary-btn:hover {
+  background: linear-gradient(135deg, #334155, #1e293b);
+}
 </style>   
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />   
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>   
@@ -614,6 +1039,27 @@ line-height: 28px;
 </button>   
 </div>   
   
+<!-- ========================================================= -->
+<!-- ========================================================= -->
+<!-- ========================================================= -->
+<!-- 1-A. TRAVEL CALENDAR & DAY SUMMARY (14박 15일 3주 캘린더) -->
+<!-- ========================================================= -->
+<div class="calendar-section">
+  <div class="calendar-header">
+    <h3>🗓️ 14박 15일 여행 캘린더 (2026.09.25 ~ 10.09)</h3>
+    <p>달력에서 일정을 탭하면 <b>주요 명소와 하는 일 요약</b>이 바로 표시되며, <b>상세 일정표로 즉시 이동</b>할 수 있습니다.</p>
+  </div>
+
+  
+
+  <div id="calendarGridContainer"></div>
+
+  <!-- Selected Day Summary Card (누르면 나타나는 요약 카드) -->
+  <div id="calendarDetailCard" class="calendar-detail-card">
+    <!-- Populated dynamically by selectCalendarDay(dayNum) -->
+  </div>
+</div>
+  
 <!-- Critical Warnings & Cautions Banner -->   
 <div class="warning-card">   
 <h3>⚠️ 필수 여행 유의사항 &amp; 핵심 체크리스트</h3>   
@@ -625,48 +1071,7 @@ line-height: 28px;
 <li><b>공항 이동 여유 시간(버퍼) 준수</b>: 국내선 항공 이동 시 출발 1.5~2시간 전 공항 도착, 도착 후 수하물 수취/출국장 이동 30~40분을 반영하여 무리 없는 이동을 유지합니다.</li>   
 <li><b>그라나다 1박 2일용 가방 분리 패킹</b>: 바르셀로나 1차 숙소(Occidental)에 대형 캐리어를 안심 보관하고, 그라나다 이동 시에는 1박용 소형 가방만 소지하여 이동을 가볍게 합니다.</li>   
 </ul>   
-</div>   
-  
-<!-- 6-Region Travel Route Summary -->   
-<div class="route-summary-section">   
-<h3>🗺️ 6개 지역별 핵심 일정 및 주요 명소 요약</h3>   
-  
-<div class="region-summary-card">   
-<h4><span>📍 1구간: 리스본 (Lisbon)</span> <span>9/25 ~ 9/28 (3박)</span></h4>   
-<p><b>주요 명소</b>: 제로니무스 수도원, 벨렝탑, 호시우 광장, 코메르시우 강변, 알파마 파두 정찬</p>   
-<p><b>어머니 맞춤 케어</b>: 공항 도착 후 짐 찾기 및 입국 버퍼 반영, 평지 위주 적응 산책, 알파마 언덕 구간 우버 차량 탑승</p>   
-</div>   
-  
-<div class="region-summary-card" style="border-left-color: #0369a1;">   
-<h4><span style="color:#0369a1;">📍 2구간: 포르투 (Porto)</span> <span>9/28 ~ 10/01 (3박)</span></h4>   
-<p><b>주요 명소</b>: 상벤투 아줄레주 역, 렐루 서점, 마제스틱 카페, 도루강 6교량 유람선, 가이아 와이너리, 모루 공원 노을</p>   
-<p><b>어머니 맞춤 케어</b>: 50분 크루즈 좌석에 앉아서 편하게 지중해 다리 감상, 라이언에어 출발 1.5~2시간 전 공항 도착</p>   
-</div>   
-  
-<div class="region-summary-card" style="border-left-color: #0d9488;">   
-<h4><span style="color:#0d9488;">📍 3구간: 토사델마르 (Tossa de Mar)</span> <span>10/01 ~ 10/03 (2박)</span></h4>   
-<p><b>주요 명소</b>: 빌라 벨라(Vila Vella) 중세 요새 성벽, 지중해 모래사장 선베드 힐링</p>   
-<p><b>어머니 맞춤 케어</b>: BCN 공항 수하물 수취 후 Sarfa 시외버스 이동, 관광 압박 없이 온전히 파도 소리 들으며 자유 힐링</p>   
-</div>   
-  
-<div class="region-summary-card" style="border-left-color: #7c3aed;">   
-<h4><span style="color:#7c3aed;">📍 4구간: 바르셀로나 1차 (Barcelona)</span> <span>10/03 ~ 10/05 (2박)</span></h4>   
-<p><b>주요 명소</b>: 구엘 공원 일몰 조망, 몬세라트 기암괴석 & 시체스 투어, 고딕 지구 자유 산책</p>   
-<p><b>어머니 맞춤 케어</b>: 숙소(Occidental) 입실 후 여유 휴식, 구엘 공원 상단 택시 이동, 그라나다 비행 2시간 전 공항 도착</p>   
-</div>   
-  
-<div class="region-summary-card" style="border-left-color: #d97706;">   
-<h4><span style="color:#d97706;">📍 5구간: 그라나다 (Granada)</span> <span>10/05 ~ 10/06 (1박)</span></h4>   
-<p><b>주요 명소</b>: 알함브라 궁전 (08:30~12:30 가이드 투어 / 09:00 나스르 궁전 정시 입장), 알바이신 산 니콜라스 전망대</p>   
-<p><b>어머니 맞춤 케어</b>: 공항 야간 도착 후 짐 찾기 및 택시 이동, 알함브라 완경사 보행, BCN 귀환 항공편 1.5시간 전 공항 도착</p>   
-</div>   
-  
-<div class="region-summary-card" style="border-left-color: #c026d3;">   
-<h4><span style="color:#c026d3;">📍 6구간: 바르셀로나 2차 (Barcelona)</span> <span>10/06 ~ 10/08 (2박)</span></h4>   
-<p><b>주요 명소</b>: 사그라다 파밀리아(10/7 16:30 예약), 카사 바트요·카사 밀라 외관 및 그라시아 명품거리 쇼핑, 몬주익 케이블카</p>   
-<p><b>어머니 맞춤 케어</b>: 숙소(Almanac) 인근 그라시아 평지 직선 동선 및 중간 숙소 휴식, 10/08 국제선 귀국 3시간 전 공항 도착</p>   
-</div>   
-</div>   
+</div>
   
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">   
 <button class="btn-switch-view" onclick="showDetailView()">   
@@ -5926,7 +6331,581 @@ document.addEventListener("DOMContentLoaded", function() {
   switchRegion(1);
   selectDay(1);
   renderBudgetDashboard();
+  renderCalendar('focus');
+  selectCalendarDay(1, false);
 });
+
+// =========================================================
+// 🗓️ Travel Calendar & Day Summary Data & Logic (단일 캘린더 & 도하 제외)
+// =========================================================
+const calendarDaysData = [
+  {
+    day: 1,
+    date: "9/25 (금)",
+    month: 9,
+    dateNum: 25,
+    regionNum: 1,
+    regionName: "리스본 (1구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0284c7",
+    badgeBg: "#e0f2fe",
+    line1: { text: "🇵🇹 리스본", type: "pill-start", pillClass: "pill-lisbon" },
+    line2: null,
+    line3: "3대광장",
+    title: "1일차: 리스본 입국·카드수령 & 3대 광장·상 페드루 전망대 노을",
+    attractions: ["리스본 공항 T1", "피게이라 광장", "호시우 광장", "헤스타우라도르스 광장", "상 페드루 전망대", "Marisqueira UMA"],
+    activities: [
+      "🛬 카타르항공(QR 859/341) 13:35 리스본 T1 입국, 리스보아 카드 수령 및 우버로 숙소 이동 (15:00 체크인)",
+      "🏛️ 바이샤 3대 광장(피게이라, 호시우, 헤스타우라도르스) 평지 적응 산책",
+      "🌅 글로리아 푸니쿨라 타고 상 페드루 전망대 올라 황금빛 노을 감상",
+      "🍽️ Marisqueira UMA에서 푸짐한 해물밥 만찬 즐기며 여유로운 첫날 마무리"
+    ],
+    transit: "카타르항공 (인천➔도하➔리스본) / 공항 ➔ 숙소 우버 (약 20분)",
+    hotel: "리스본 바이샤 에어비앤비 (R. do Regedor, 3박)",
+    motherCare: "장시간 비행 후 첫날이므로 언덕 등반 배제, 평지 위주 산책 및 쾌적한 숙소 휴식",
+    links: [{ reg: 1, day: 1, text: "📱 1일차 리스본 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 2,
+    date: "9/26 (토)",
+    month: 9,
+    dateNum: 26,
+    regionNum: 1,
+    regionName: "리스본 (1구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0284c7",
+    badgeBg: "#e0f2fe",
+    line1: { text: "리스본", type: "pill-end", pillClass: "pill-lisbon" },
+    line2: null,
+    line3: "치아두",
+    title: "2일차: 치아두·카르무 광장 & 산타주스타 뷰·마트 홈쿠킹",
+    attractions: ["카르무 수녀원 광장", "산타주스타 전망뷰", "베르트랑 서점", "The Folks 카페", "사크라멘투", "상 도밍구스 성당", "핑구도스 마트"],
+    activities: [
+      "☕ 바이탈에그미나 조식 후 유서 깊은 치아두 지구 & 카르무 광장 산책",
+      "📸 산타주스타 엘리베이터 1시간 줄서기 대신 수녀원 옆 무료 보행로로 상부 파노라마 조망",
+      "📚 세계에서 가장 오래된 서점 '베르트랑' 방문 및 사크라멘투 미식 런치",
+      "🛏️ 숙소 복귀하여 2시간 낮잠 완충 후 상 도밍구스 성당 관람 & 핑구도스 장보기 홈쿠킹"
+    ],
+    transit: "도보 및 메트로 / 지하철역 도보 2분 숙소 인근 동선",
+    hotel: "리스본 바이샤 에어비앤비 (R. do Regedor)",
+    motherCare: "산타주스타 긴 줄 대기 없이 무료 뷰 데크 활용, 점심 후 2시간 침대 낮잠으로 시차 완벽 적응",
+    links: [{ reg: 1, day: 2, text: "📱 2일차 치아두 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 3,
+    date: "9/27 (일)",
+    month: 9,
+    dateNum: 27,
+    regionNum: 1,
+    regionName: "리스본 (1구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0284c7",
+    badgeBg: "#e0f2fe",
+    line1: { text: "🇵🇹 리스본", type: "pill-start", pillClass: "pill-lisbon" },
+    line2: null,
+    line3: "벨렝지구",
+    title: "3일차: 벨렝 지구 오픈런 투어 & 상 조르즈 성 일몰",
+    attractions: ["제로니무스 수도원", "파스테이스 드 벨렝", "국립 마차 박물관", "발견기념비", "벨렝탑", "타임아웃 마켓", "상 조르즈 성", "클루브 드 파두"],
+    activities: [
+      "🏛️ 15E 트램으로 벨렝 이동, 제로니무스 수도원 09:30 오픈런 및 원조 에그타르트 시식",
+      "🎨 화려한 국립 마차 박물관 관람 및 테주강변 발견기념비·벨렝탑 외관 조망",
+      "🍽️ 타임아웃 마켓 점심 식사 후 숙소 복귀하여 1.7시간 낮잠 휴식",
+      "🏰 우버로 알파마 언덕 올라 상 조르즈 성 노을 감상 후 클루브 드 파두에서 와인 디너"
+    ],
+    transit: "15E 노면전차 + 우버 (알파마 언덕 이동 시 필수)",
+    hotel: "리스본 바이샤 에어비앤비 (R. do Regedor)",
+    motherCare: "알파마 가파른 골목길은 도보 등반 대신 우버로 성 정문까지 직행하여 관절 보호",
+    links: [{ reg: 1, day: 3, text: "📱 3일차 벨렝·상조르즈 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 4,
+    date: "9/28 (월)",
+    month: 9,
+    dateNum: 28,
+    regionNum: 2,
+    regionName: "리스본➔포르투 (1·2구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0284c7",
+    badgeBg: "#e0f2fe",
+    line1: { text: "리스본", type: "pill-end", pillClass: "pill-lisbon" },
+    line2: { text: "🇵🇹 포르투", type: "pill-start", pillClass: "pill-porto" },
+    line3: "상벤투",
+    title: "4일차: 리스본 체크아웃 & CP 고속열차 포르투 이동 & 상벤투·알리아두스 야경",
+    attractions: ["호시우 역", "만테이가리아", "산타 아폴로니아 역", "CP 고속열차", "상벤투 역", "자유 광장", "알리아두스 시청사", "Muu Steakhouse"],
+    activities: [
+      "🥧 만테이가리아 따끈한 에그타르트 포장 후 숙소 11:00 체크아웃",
+      "🚆 산타 아폴로니아 역에서 11:30 CP 고속열차 탑승 ➔ 14:48 포르투 도착 (창밖 풍경 힐링)",
+      "🏛️ 상벤투 역 푸른 아줄레주 벽화 감상 후 역 바로 맞은편 숙소(InBloom) 체크인 & 쉼",
+      "✨ 알리아두스 시청사 야경 산책 후 Muu Steakhouse에서 최상급 스테이크 석식"
+    ],
+    transit: "CP 알파 펜둘라르 고속열차 (리스본➔포르투 3시간 18분, 1등석 권장)",
+    hotel: "포르투 에어비앤비 (상벤투 역 맞은편, 3박)",
+    motherCare: "기차 이동 중 넓은 좌석에서 다리 뻗고 휴식, 상벤투 역 맞은편 숙소로 캐리어 이동 부담 제로",
+    links: [
+      { reg: 1, day: 4, text: "📱 [1구간 리스본 체크아웃 & 기차] 상세 보기 ➔" },
+      { reg: 2, day: 4, text: "📱 [2구간 포르투 입성 & 야경 산책] 상세 보기 ➔", isSecondary: true }
+    ]
+  },
+  {
+    day: 5,
+    date: "9/29 (화)",
+    month: 9,
+    dateNum: 29,
+    regionNum: 2,
+    regionName: "포르투 (2구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0369a1",
+    badgeBg: "#e0f2fe",
+    line1: { text: "🇵🇹 포르투", type: "pill-start", pillClass: "pill-porto" },
+    line2: null,
+    line3: "모루정원",
+    title: "5일차: 볼량 시장·수정궁 정원 & 동루이스 다리·모루 정원 노을 일몰",
+    attractions: ["산투 일드폰수 성당", "볼량 시장", "알마스 성당", "클레리구스 성당", "수정궁 정원", "동루이스 다리 상층", "모루 정원", "세하 두 필라르"],
+    activities: [
+      "🛍️ 아줄레주 성당 투어(산투 일드폰수, 알마스) & 현대식 볼량 시장 구경 및 기념품 쇼핑",
+      "🌳 클레리구스 오르간 감상 후 수정궁 정원 잔디밭에서 도루강 바라보며 평화로운 피크닉",
+      "🛏️ 숙소 복귀하여 침대 낮잠으로 오후 체력 완충",
+      "🌅 동루이스 다리 상층 보행로를 건너 모루 정원 & 세하 두 필라르 수도원에서 포르투 최고의 석양 감상"
+    ],
+    transit: "도보 + 메트로 D선 (동루이스 다리 상층 이동 시)",
+    hotel: "포르투 에어비앤비 (상벤투 역 부근)",
+    motherCare: "렐루 서점은 좁고 위험한 내부 대신 외관 감상, 수정궁 그늘 쉼 및 모루 정원 복귀 시 메트로 탑승",
+    links: [{ reg: 2, day: 5, text: "📱 5일차 포르투 명소·모루 정원 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 6,
+    date: "9/30 (수)",
+    month: 9,
+    dateNum: 30,
+    regionNum: 2,
+    regionName: "포르투 (2구간)",
+    flag: "🇵🇹",
+    badgeColor: "#0369a1",
+    badgeBg: "#e0f2fe",
+    line1: { text: "포르투", type: "pill-mid", pillClass: "pill-porto" },
+    line2: null,
+    line3: "대서양등대",
+    title: "6일차: 포르투 대성당 & 1번 트램·펠게이라스 등대 대서양 일몰",
+    attractions: ["포르투 대성당 테라스", "카스트로", "볼사 궁전", "인판테 광장", "1번 목조 빈티지 트램", "파세이우 알레그레 공원", "펠게이라스 등대", "Tapabento"],
+    activities: [
+      "🏛️ 포르투 대성당 테라스에서 구시가지 조망 & 볼사 궁전과 인판테 광장 산책",
+      "🍽️ Meia-Nau 신선한 해산물 오찬 후 숙소에서 1.5시간 침대 낮잠 완충",
+      "🚋 1번 빈티지 목조 트램 타고 도루강변을 따라 대서양 입구까지 낭만 주행",
+      "🗼 펠게이라스 등대 방파제에서 대서양 수평선으로 떨어지는 장엄한 낙조 감상 후 Tapabento 피날레 만찬"
+    ],
+    transit: "1번 역사적 빈티지 트램 + 숙소 복귀 시 우버(15분)",
+    hotel: "포르투 에어비앤비 (상벤투 역 부근)",
+    motherCare: "트램 좌석에 편안히 앉아 도루강 풍경 감상, 대서양 낙조 후 숙소 복귀는 우버로 체력 소모 방지",
+    links: [{ reg: 2, day: 6, text: "📱 6일차 대성당·등대 일몰 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 7,
+    date: "10/01 (목)",
+    month: 10,
+    dateNum: 1,
+    regionNum: 3,
+    regionName: "포르투➔토사델마르 (2·3구간)",
+    flag: "🇪🇸",
+    badgeColor: "#0369a1",
+    badgeBg: "#e0f2fe",
+    line1: { text: "포르투", type: "pill-end", pillClass: "pill-porto" },
+    line2: { text: "🇪🇸 토사델마르", type: "pill-start", pillClass: "pill-tossa" },
+    line3: "토사해변",
+    title: "7일차: 포르투 체크아웃 & 바르셀로나 항공 이동 ➔ 토사델마르 입성 & 지중해 성벽 조망",
+    attractions: ["포르투 공항", "라이언에어(FR 4585)", "바르셀로나 BCN T2", "Sarfa 시외직행버스", "플랏자 그란 해변", "중세 성벽 조망", "호텔 델핀"],
+    activities: [
+      "🛫 조식 후 포르투 공항 이동, 11:20 라이언에어 탑승 ➔ 14:05 바르셀로나 BCN T2 착륙",
+      "🚌 공항 T2B에서 토사델마르 직행 Sarfa 버스 탑승 (15:10 발, 환승 없이 1시간 40분 직행)",
+      "🏨 토사델마르 터미널 도착 후 해변 도보 2분 거리 4성급 호텔 델핀 체크인 & 쉼",
+      "🏖️ 플랏자 그란 모래사장 산책하며 바다 위 우뚝 솟은 중세 성벽 조망 & 테라스 빠에야 만찬"
+    ],
+    transit: "라이언에어 항공편 (포르투➔BCN 1시간 45분) + Sarfa 공항 직행 버스 (1시간 40분)",
+    hotel: "토사델마르 호텔 델핀 4* 수페리어 (Platja Gran 해변 100m, 2박)",
+    motherCare: "바르셀로나 시내 환승 없이 공항에서 직행 버스로 편안하게 이동, 평지 해변 호텔로 이동 피로 제로",
+    links: [
+      { reg: 2, day: 7, text: "📱 [2구간 포르투 체크아웃 & 비행] 상세 보기 ➔" },
+      { reg: 3, day: 7, text: "📱 [3구간 토사델마르 입성 & 해변] 상세 보기 ➔", isSecondary: true }
+    ]
+  },
+  {
+    day: 8,
+    date: "10/02 (금)",
+    month: 10,
+    dateNum: 2,
+    regionNum: 3,
+    regionName: "토사델마르 (3구간)",
+    flag: "🇪🇸",
+    badgeColor: "#0d9488",
+    badgeBg: "#ccfbf1",
+    line1: { text: "🇪🇸 토사델마르", type: "pill-start", pillClass: "pill-tossa" },
+    line2: null,
+    line3: "빌라벨라",
+    title: "8일차: 빌라 벨라 중세 고성 트래킹 & 지중해 해수욕·구시가지 산책",
+    attractions: ["빌라 벨라 성벽", "토사 등대 & 절벽 카페", "에스 코돌라르 해변", "플랏자 그란 선베드", "구시가지 상점가", "Restaurant Tursia"],
+    activities: [
+      "🏰 완만한 성벽 슬로프 따라 빌라 벨라 고성 산책 & 정상 토사 등대 절벽 카페에서 바다 뷰 티타임",
+      "🏖️ 호텔에서 수영복 환복 후 플랏자 그란 해변 파라솔 선베드에 누워 온전한 힐링 및 바닷물 발 담그기",
+      "🛏️ 호텔 샤워 및 달콤한 낮잠 휴식",
+      "🛍️ 낭만적인 돌담 구시가지 골목 쇼핑 & Restaurant Tursia에서 정통 카탈루냐 만찬"
+    ],
+    transit: "전 일정 도보 힐링 (필요 시 성벽 꼬마기차 Dotto Train 탑승)",
+    hotel: "토사델마르 호텔 델핀 4* 수페리어",
+    motherCare: "성벽 정상까지 꼬마기차로 편안하게 오를 수 있으며, 호텔이 바로 앞이라 언제든 객실 휴식 가능",
+    links: [{ reg: 3, day: 8, text: "📱 8일차 빌라 벨라·해수욕 힐링 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 9,
+    date: "10/03 (토)",
+    month: 10,
+    dateNum: 3,
+    regionNum: 4,
+    regionName: "토사➔바르셀로나 1차 (3·4구간)",
+    flag: "🇪🇸",
+    badgeColor: "#0d9488",
+    badgeBg: "#ccfbf1",
+    line1: { text: "토사델마르", type: "pill-end", pillClass: "pill-tossa" },
+    line2: { text: "🇪🇸 바르셀로나", type: "pill-start", pillClass: "pill-bcn" },
+    line3: "몬주익",
+    title: "9일차: 토사델마르 체크아웃 & 사르파 버스 바르셀로나 입성 & 몬주익 숲길·분수쇼",
+    attractions: ["Sarfa 버스", "Occidental Barcelona 1929", "아레나스 쇼핑몰", "KimchiMama(한식)", "몬주익 언덕", "알칼데 전망대", "MNAC 테라스", "마법의 분수"],
+    activities: [
+      "🚌 10:45 발 Sarfa 버스로 바르셀로나 북부 터미널 이동 ➔ 12:15 Occidental 호텔 짐 보관",
+      "🍲 아레나스 몰 한식(KimchiMama) 점심 식사 후 15:00 호텔 체크인 & 휴식",
+      "🌳 150번 버스로 몬주익 정상 이동, 알칼데 전망대 바다 뷰 및 그늘진 숲길 내리막 산책",
+      "⛲ MNAC 테라스에서 시내 노을 감상 후 에스파냐 광장 몬주익 마법의 분수쇼 직관"
+    ],
+    transit: "Sarfa 버스 + 바르셀로나 시내 150번 몬주익 버스 / 메트로 L1·L3",
+    hotel: "Occidental Barcelona 1929 (에스파냐 광장 인근, 2박 / 현장결제 €323.99)",
+    motherCare: "몬주익은 150번 버스로 정상까지 편하게 올라 완만한 내리막길만 걷고, 분수쇼는 숙소 도보 5분 거리",
+    links: [
+      { reg: 3, day: 9, text: "📱 [3구간 토사델마르 체크아웃 & 버스] 상세 보기 ➔" },
+      { reg: 4, day: 9, text: "📱 [4구간 바르셀로나 입성 & 몬주익] 상세 보기 ➔", isSecondary: true }
+    ]
+  },
+  {
+    day: 10,
+    date: "10/04 (일)",
+    month: 10,
+    dateNum: 4,
+    regionNum: 4,
+    regionName: "바르셀로나 1차 (4구간)",
+    flag: "🇪🇸",
+    badgeColor: "#7c3aed",
+    badgeBg: "#ede9fe",
+    line1: { text: "🇪🇸 바르셀로나", type: "pill-start", pillClass: "pill-bcn" },
+    line2: null,
+    line3: "고딕지구",
+    title: "10일차: 카탈루냐 미술관 MNAC·구엘 저택 & 레이알 광장·고딕 지구 야경 투어",
+    attractions: ["카탈루냐 미술관 MNAC", "호안 마라갈 왕실 정원", "구엘 저택", "레이알 광장", "츄레리아", "바르셀로나 대성당", "산타 마리아 델 마르"],
+    activities: [
+      "🏛️ 웅장한 국립 카탈루냐 미술관(MNAC) 로마네스크 벽화 관람 & 푸른 왕실 정원 산책",
+      "🛏️ 점심 식사 후 호텔 복귀하여 침대에서 넉넉한 휴식으로 체력 비축",
+      "🏰 가우디의 초기 대저택 '구엘 저택' 내부 관람 (중앙 돔 살롱과 환상적인 옥상 굴뚝)",
+      "✨ 야자수 드리운 레이알 광장 석식 & 갓 튀긴 츄레리아 츄러스 맛보며 고딕·보른 지구 야경 투어"
+    ],
+    transit: "메트로 L3 (Liceu역) 및 에스파냐 광장 도보",
+    hotel: "Occidental Barcelona 1929 (에스파냐 광장)",
+    motherCare: "MNAC 내부 엘리베이터 및 벤치 적극 활용, 오후 충분한 숙소 낮잠으로 저녁 야경 산책 준비",
+    links: [{ reg: 4, day: 10, text: "📱 10일차 MNAC·구엘·고딕 야경 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 11,
+    date: "10/05 (월)",
+    month: 10,
+    dateNum: 5,
+    regionNum: 5,
+    regionName: "바르셀로나➔그라나다 (4·5구간)",
+    flag: "🇪🇸",
+    badgeColor: "#7c3aed",
+    badgeBg: "#ede9fe",
+    line1: { text: "바르셀로나", type: "pill-end", pillClass: "pill-bcn" },
+    line2: { text: "🇪🇸 그라나다", type: "pill-start", pillClass: "pill-granada" },
+    line3: "구엘공원",
+    title: "11일차: 구엘 공원·가우디 외관 & 개선문·시우타델라 공원 & 그라나다 비행",
+    attractions: ["구엘 공원 후문", "카사 밀라 외관", "카사 바트요 외관", "개선문", "시우타델라 공원", "BCN T1", "부엘링 항공(VY 2018)", "그라나다 호텔"],
+    activities: [
+      "🧳 Occidental 체크아웃 후 2차 숙소(Almanac)에 대형 캐리어 보관 (1박용 작은 가방만 소지!)",
+      "🏰 택시로 구엘 공원 후문 하차하여 완만한 내리막길로 헨젤과 그레텔 과자의 집 조망",
+      "🏛️ 파세이그 데 그라시아 가우디 외관 감상 & 개선문과 시우타델라 공원 호수변 힐링",
+      "✈️ BCN T1 이동, 21:15 부엘링 VY 2018 탑승 ➔ 22:45 그라나다 도착 후 호텔 체크인 및 취침"
+    ],
+    transit: "시내 택시 + 부엘링 국내선 항공편 (21:15~22:45, 사전 웹 체크인 필수)",
+    hotel: "그라나다 Hotel Puerta de las Granadas (1박)",
+    motherCare: "구엘 공원은 후문 하차로 계단 등반 회피, 대형 캐리어는 바르셀로나에 두고 1박용 배낭만 챙겨 가볍게 이동",
+    links: [
+      { reg: 4, day: 11, text: "📱 [4구간 구엘 공원 & 바르셀로나] 상세 보기 ➔" },
+      { reg: 5, day: 11, text: "📱 [5구간 그라나다 야간 도착] 상세 보기 ➔", isSecondary: true }
+    ]
+  },
+  {
+    day: 12,
+    date: "10/06 (화)",
+    month: 10,
+    dateNum: 6,
+    regionNum: 6,
+    regionName: "그라나다➔바르셀로나 2차 (5·6구간)",
+    flag: "🇪🇸",
+    badgeColor: "#d97706",
+    badgeBg: "#fef3c7",
+    line1: { text: "그라나다", type: "pill-end", pillClass: "pill-granada" },
+    line2: { text: "🇪🇸 바르셀로나", type: "pill-start", pillClass: "pill-bcn2" },
+    line3: "알함브라",
+    title: "12일차: 알함브라 궁전 가이드 투어 & 알바이신 전망대 & 바르셀로나 2차 입성",
+    attractions: ["알함브라 궁전(나스르 궁전/카를로스 5세/알카사바/헤네랄리페)", "산 니콜라스 전망대", "부엘링 항공(VY 2017)", "Almanac Barcelona"],
+    activities: [
+      "🏛️ 08:30 알함브라 투어 미팅(여권 원본 필참!), 09:00 나스르 궁전 정시 입장 및 전문 해설 투어",
+      "🌸 아라베스크 정원의 진수 헤네랄리페 별궁 감상 후 La Auténtica Carmela 점심 식사",
+      "🚌 C31/C32 미니버스로 알바이신 산 니콜라스 전망대 이동, 알함브라 전경 파노라마 감상",
+      "🛫 17:55 부엘링 항공 그라나다 출발 ➔ 19:25 바르셀로나 도착, 5성급 Almanac 입성 및 대형 캐리어 수령"
+    ],
+    transit: "C31/C32 미니버스 + 택시 + 부엘링 항공 (17:55~19:25)",
+    hotel: "Almanac Barcelona (카탈루냐 광장/그라시아 인근 5성급 럭셔리 호텔, 2박)",
+    motherCare: "산 니콜라스 전망대는 미니버스로 편안하게 이동(도보 등반 절대 금지), 5성급 호텔 입성으로 피로 완전 해소",
+    links: [
+      { reg: 5, day: 12, text: "📱 [5구간 알함브라 가이드 투어] 상세 보기 ➔" },
+      { reg: 6, day: 12, text: "📱 [6구간 바르셀로나 2차 입성] 상세 보기 ➔", isSecondary: true }
+    ]
+  },
+  {
+    day: 13,
+    date: "10/07 (수)",
+    month: 10,
+    dateNum: 7,
+    regionNum: 6,
+    regionName: "바르셀로나 2차 (6구간)",
+    flag: "🇪🇸",
+    badgeColor: "#c026d3",
+    badgeBg: "#fae8ff",
+    line1: { text: "🇪🇸 바르셀로나", type: "pill-start", pillClass: "pill-bcn2" },
+    line2: null,
+    line3: "사그라다",
+    title: "13일차: 그라시아 명품 쇼핑·미슐랭 1스타 런치 & 사그라다 파밀리아 공식 집중 투어",
+    attractions: ["그라시아 거리(로에베/마시모두띠)", "엘코르테잉글레스 고메관", "Caelis 미슐랭 1스타", "사그라다 파밀리아", "가우디 광장 연못", "Azimuth 루프탑"],
+    activities: [
+      "🛍️ 5성급 조식 뷔페 후 파세이그 데 그라시아 명품거리 & 백화점 고메관 여유로운 쇼핑",
+      "⭐ Caelis 미슐랭 1스타 런치 코스 오찬 후 호텔 객실에서 1.5시간 완벽한 낮잠 충전",
+      "⛪ 16:30 사그라다 파밀리아 정시 입장! 오후 황금빛 석양이 쏟아지는 스테인드글라스 숲 황홀한 감상",
+      "📸 가우디 광장 연못에서 성당 야경 촬영 후 호텔 8층 루프탑 바에서 바르셀로나 밤 풍경 감상"
+    ],
+    transit: "도보(그라시아 명품거리 평지) 및 택시 (성당 이동 시)",
+    hotel: "Almanac Barcelona (그라시아 명품거리 부근)",
+    motherCare: "사그라다 파밀리아 입장(16:30) 전 호텔 침대 낮잠으로 최상의 컨디션 유지, 쇼핑 짐은 바로 호텔 보관",
+    links: [{ reg: 6, day: 13, text: "📱 13일차 사그라다 파밀리아·쇼핑 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 14,
+    date: "10/08 (목)",
+    month: 10,
+    dateNum: 8,
+    regionNum: 6,
+    regionName: "바르셀로나 2차 (6구간)",
+    flag: "🇪🇸",
+    badgeColor: "#c026d3",
+    badgeBg: "#fae8ff",
+    line1: { text: "바르셀로나", type: "pill-end", pillClass: "pill-bcn2" },
+    line2: null,
+    line3: "공항출국",
+    title: "14일차: 그라시아 자유 산책·12시 체크아웃 & BCN 공항 출국·도하행 비행",
+    attractions: ["그라시아 거리", "카사 바트요 외관", "Batea 고별 런치", "BCN 공항 T1", "DIVA 텍스리펀 승인 키오스크", "카타르항공 QR 146"],
+    activities: [
+      "☕ 5성급 여유 조식 후 호텔 주변 그라시아 거리 마지막 산책 & 12:00 레이트 체크아웃",
+      "🍽️ 인근 미식 레스토랑 Batea에서 스페인 고별 오찬 즐기기",
+      "🚕 13:15 공항 택시 탑승 ➔ 13:45 BCN T1 도착 (출발 2시간 50분 전 여유 도착)",
+      "📄 DIVA 키오스크에서 바코드 1분 전자 텍스리펀 승인 후 16:35 발 카타르항공 QR 146 탑승"
+    ],
+    transit: "호텔 ➔ BCN T1 공항 택시 (약 25분) + 카타르항공 QR 146 (도하행)",
+    hotel: "기내 1박 (카타르항공 항공기)",
+    motherCare: "12시까지 호텔에서 여유 있게 짐 정리, 공항 3시간 전 도착으로 서두름 없는 편리한 출국 및 전자 텍스리펀 처리",
+    links: [{ reg: 6, day: 14, text: "📱 14일차 출국 & 귀국 비행 상세 일정표 바로가기 ➔" }]
+  },
+  {
+    day: 15,
+    date: "10/09 (금)",
+    month: 10,
+    dateNum: 9,
+    regionNum: 6,
+    regionName: "최종 귀국 (6구간)",
+    flag: "🇰🇷",
+    badgeColor: "#10b981",
+    badgeBg: "#d1fae5",
+    line1: { text: "🇰🇷 인천", type: "pill-single", pillClass: "pill-incheon" },
+    line2: null,
+    line3: "인천도착",
+    title: "15일차: 도하 환승 ➔ 인천국제공항 도착 (최종 귀국 완료)",
+    attractions: ["도하 하마드 공항", "오차드(The Orchard) 실내 열대정원", "카타르항공 QR 858", "인천국제공항 T1"],
+    activities: [
+      "🛬 23:55 도하 하마드 공항 도착, 2시간 10분 안락한 환승 대기 (실내 정원 산책 & 면세점)",
+      "✈️ 02:05 발 카타르항공 QR 858 탑승하여 인천으로 귀국 비행",
+      "🇰🇷 17:05 인천국제공항 제1여객터미널 안전 착륙 및 입국 수속",
+      "🎉 어머니와 함께한 14박 15일 포르투갈 & 스페인 효도 여행 성공적 완료!"
+    ],
+    transit: "카타르항공 QR 858 (도하➔인천 8시간 50분)",
+    hotel: "따뜻한 우리 집",
+    motherCare: "도하 공항 평지 무빙워크 및 쾌적한 라운지 휴식, 인천 도착 후 리무진/콜밴 귀가로 귀가 편의 극대화",
+    links: [{ reg: 6, day: 15, text: "📱 15일차 귀국 상세 일정표 바로가기 ➔" }]
+  }
+];
+
+let selectedCalendarDay = 1;
+
+function renderCalendar() {
+  const container = document.getElementById('calendarGridContainer');
+  let html = `
+    <div class="cal-month-title">
+      <span>📍 14박 15일 전체 여행 캘린더</span>
+      <span style="font-size:0.82rem; color:#64748b; font-weight:700;">2026.09.25 ~ 10.09</span>
+    </div>
+    <div class="cal-weekdays">
+      <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+    </div>
+    <div class="cal-days-grid">
+  `;
+  
+  // Week 1: 9/20 to 9/26
+  for (let d = 20; d <= 24; d++) {
+    html += `<div class="cal-cell inactive"><div class="cal-date-num">${d}</div><div class="cal-slots-container"><div class="cal-slot-line3" style="color:#94a3b8;">출발전</div></div></div>`;
+  }
+  html += buildTripCellHtml(1);
+  html += buildTripCellHtml(2);
+  
+  // Week 2: 9/27 to 10/03 (Days 3 to 9)
+  for (let d = 3; d <= 9; d++) {
+    html += buildTripCellHtml(d);
+  }
+  
+  // Week 3: 10/04 to 10/10 (Days 10 to 15, and 10/10 inactive)
+  for (let d = 10; d <= 15; d++) {
+    html += buildTripCellHtml(d);
+  }
+  html += `<div class="cal-cell inactive"><div class="cal-date-num">10</div><div class="cal-slots-container"><div class="cal-slot-line3" style="color:#94a3b8;">귀국후</div></div></div>`;
+  
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function buildTripCellHtml(dayNum) {
+  const d = calendarDaysData.find(item => item.day === dayNum);
+  if (!d) return '';
+  const isSelected = (d.day === selectedCalendarDay);
+  
+  // Line 1: City 1
+  const line1Html = `
+    <div class="cal-slot-line1">
+      <div class="cal-city-pill ${d.line1.type} ${d.line1.pillClass}">
+        ${d.line1.text}
+      </div>
+    </div>
+  `;
+  
+  // Line 2: City 2 (if present) or empty spacer
+  const line2Html = d.line2 ? `
+    <div class="cal-slot-line2">
+      <div class="cal-city-pill ${d.line2.type} ${d.line2.pillClass}">
+        ${d.line2.text}
+      </div>
+    </div>
+  ` : `
+    <div class="cal-slot-line2"></div>
+  `;
+  
+  // Line 3: Single-word travel highlight
+  const line3Html = `
+    <div class="cal-slot-line3">
+      ${d.line3}
+    </div>
+  `;
+  
+  return `
+    <div class="cal-cell trip-day ${isSelected ? 'selected' : ''}" 
+         data-day="${d.day}" 
+         onclick="selectCalendarDay(${d.day})"
+         style="border-top: 3.5px solid ${d.badgeColor};">
+      <div class="cal-date-row">
+        <span class="cal-date-num">${d.dateNum}</span>
+        <span class="cal-day-badge" style="background:${d.badgeColor};">D${d.day}</span>
+      </div>
+      <div class="cal-slots-container">
+        ${line1Html}
+        ${line2Html}
+        ${line3Html}
+      </div>
+    </div>
+  `;
+}
+
+function selectCalendarDay(dayNum) {
+  selectedCalendarDay = dayNum;
+  
+  // Highlight cell in calendar
+  document.querySelectorAll('.cal-cell.trip-day').forEach(el => {
+    const elDay = parseInt(el.getAttribute('data-day'), 10);
+    el.classList.toggle('selected', elDay === dayNum);
+  });
+  
+  const d = calendarDaysData.find(item => item.day === dayNum);
+  if (!d) return;
+  
+  const card = document.getElementById('calendarDetailCard');
+  if (!card) return;
+  
+  card.innerHTML = `
+    <div class="detail-card-header">
+      <span class="detail-day-tag" style="background:${d.badgeColor};">📅 Day ${d.day} (${d.date})</span>
+      <span class="detail-region-tag" style="color:${d.badgeColor}; background:${d.badgeBg};">${d.flag} ${d.regionName}</span>
+    </div>
+    
+    <div class="detail-card-title">${d.title}</div>
+    
+    <div class="detail-section-box">
+      <div class="section-label">📍 주요 방문 명소</div>
+      <div class="attractions-list">
+        ${d.attractions.map(a => `<span class="attraction-pill">${a}</span>`).join('')}
+      </div>
+    </div>
+    
+    <div class="detail-section-box">
+      <div class="section-label">📝 주요 하는 일 & 동선 요약</div>
+      <ul class="activities-list">
+        ${d.activities.map(act => `<li>${act}</li>`).join('')}
+      </ul>
+    </div>
+    
+    <div class="detail-section-box">
+      <div class="section-label">🚗 교통편 & 🏨 숙소 안내</div>
+      <div class="detail-meta-text">
+        <div><b>교통편</b>: ${d.transit}</div>
+        <div style="margin-top:4px;"><b>숙소</b>: ${d.hotel}</div>
+      </div>
+    </div>
+    
+    <div class="mother-care-box">
+      <b>👵 어머니 맞춤 케어 포인트</b>: ${d.motherCare}
+    </div>
+    
+    <div class="detail-btn-group">
+      ${d.links.map(l => `
+        <button class="btn-go-detail ${l.isSecondary ? 'secondary-btn' : ''}" onclick="goToDay(${l.reg}, ${l.day})">
+          ${l.text}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function goToDay(regNum, dayNum) {
+  currentRegion = regNum;
+  currentDay = dayNum;
+  showDetailView();
+  for (let i = 1; i <= 6; i++) {
+    const btn = document.getElementById('regBtn' + i);
+    if (btn) btn.classList.toggle('active', i === regNum);
+  }
+  renderHotelCard();
+  renderDayTabs();
+  renderTimeline();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 </script>
 </body>
 </html>

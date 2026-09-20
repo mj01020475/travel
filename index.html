@@ -998,6 +998,128 @@ line-height: 28px;
 .btn-go-detail.secondary-btn:hover {
   background: linear-gradient(135deg, #334155, #1e293b);
 }
+
+/* ========================================================= */
+/* 📂 Fixed Expenses Grouped Accordion Styles                */
+/* ========================================================= */
+.fixed-group-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+.fixed-group-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.fixed-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid transparent;
+}
+.fixed-group-header:hover {
+  background: #f1f5f9;
+}
+.fixed-group-header.open {
+  background: #f0f9ff;
+  border-bottom-color: #bae6fd;
+}
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.group-cat-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+.group-count-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+.group-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.group-total-krw {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #0284c7;
+}
+.group-total-eur {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .group-total-eur {
+    display: none;
+  }
+}
+.group-toggle-arrow {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 900;
+  transition: transform 0.2s ease;
+}
+.fixed-group-header.open .group-toggle-arrow {
+  transform: rotate(180deg);
+  color: #0284c7;
+}
+.fixed-group-body {
+  display: none;
+  padding: 10px 14px 14px 14px;
+  background: #ffffff;
+}
+.fixed-group-body.open {
+  display: block;
+}
+.fixed-group-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.fixed-group-table tr {
+  border-bottom: 1px solid #f1f5f9;
+}
+.fixed-group-table tr:last-child {
+  border-bottom: none;
+}
+.fixed-group-table td {
+  padding: 8px 4px;
+  vertical-align: middle;
+}
+.btn-toggle-all-fixed {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+}
+.btn-toggle-all-fixed:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
 </style>   
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />   
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>   
@@ -1331,7 +1453,8 @@ line-height: 28px;
 <option value="항공">항공</option>   
 <option value="숙박">숙박</option>   
 <option value="교통">교통</option>   
-<option value="투어" selected>투어</option>   
+<option value="투어" selected>투어</option>
+<option value="준비물">준비물</option>   
 <option value="기타">기타</option>   
 </select>   
 </div>   
@@ -1350,20 +1473,8 @@ line-height: 28px;
 </div>   
 </div>   
   
-<div style="overflow-x:auto;">   
-<table class="fixed-table">   
-<thead>   
-<tr>   
-<th>구분</th>   
-<th>상세 내역</th>   
-<th style="text-align:right;">금액(KRW)</th>   
-<th style="text-align:right;">EUR(환산)</th>   
-<th style="text-align:center; width:40px;">삭제</th>   
-</tr>   
-</thead>   
-<tbody id="fixedTableBody"></tbody>   
-</table>   
-</div>   
+<div id="fixedGroupsContainer"></div>
+<div id="fixedTableFallback" style="display:none;"><tbody id="fixedTableBody"></tbody></div>   
 </div>   
 </div>   
   
@@ -1382,6 +1493,7 @@ line-height: 28px;
   
 <script>   
 function showMainView() {   
+closeModal();   
 document.getElementById("mainView").style.display = "block";   
 document.getElementById("detailView").style.display = "none";   
 document.getElementById("budgetView").style.display = "none";   
@@ -1390,6 +1502,7 @@ window.scrollTo({ top: 0, behavior: "smooth" });
 }   
   
 function showDetailView() {   
+closeModal();   
 document.getElementById("mainView").style.display = "none";   
 document.getElementById("detailView").style.display = "block";   
 document.getElementById("budgetView").style.display = "none";   
@@ -1398,6 +1511,7 @@ window.scrollTo({ top: 0, behavior: "smooth" });
 }   
   
 function showBudgetView() {   
+closeModal();   
 document.getElementById("mainView").style.display = "none";   
 document.getElementById("detailView").style.display = "none";   
 document.getElementById("budgetView").style.display = "block";   
@@ -1509,8 +1623,19 @@ fileObj: userFiles.hotelAlmanac
 };   
 const MYMAP_GLOBAL_URL = 'https://www.google.com/maps/d/viewer?mid=1yHIjwcxfP-GUPUwAWv94aTMLIQ0cSL4';   
   
-const WAYPOINTS_DATA = {"1_1": [{"num": 1, "name": "🛬 리스본 공항 T1", "lat": 38.7756, "lng": -9.129, "desc": "13:35 입국 & 카드수령", "details": "입국장 Ask Me Lisboa에서 리스보아 카드 실물 바우처 수령 ➔ 우버 탑승"}, {"num": 2, "name": "🏨 숙소 (R. do Regedor)", "lat": 38.71465, "lng": -9.13883, "desc": "15:00 체크인 & 낮잠", "details": "호스트 Vitor 숙소 체크인 및 2시간 침대 낮잠 휴식", "isHotel": true}, {"num": 3, "name": "🏛️ 피게이라 광장", "lat": 38.7133, "lng": -9.1376, "desc": "17:00 평지 산책", "details": "숙소 바로 앞 완전 평지 광장 산책, 주앙 1세 동상"}, {"num": 4, "name": "🏛️ 호시우 광장", "lat": 38.7138, "lng": -9.1393, "desc": "17:15 물결무늬 광장", "details": "물결무늬 돌바닥(Calçada)과 분수대, 페드로 4세 동상"}, {"num": 5, "name": "🏛️ 헤스타우라도르스 광장", "lat": 38.716, "lng": -9.1419, "desc": "17:30 51E 버스 탑승", "details": "독립기념탑, 아르데코 에덴 극장 건물 ➔ 51E 미니버스 탑승"}, {"num": 6, "name": "🌅 상 페드루 전망대", "lat": 38.715, "lng": -9.1442, "desc": "17:40 붉은 노을 감상", "details": "정원 벤치에 앉아 상 조르즈 성과 리스본 시내 붉은 노을 조망"}, {"num": 7, "name": "🍽️ Marisqueira UMA", "lat": 38.7126, "lng": -9.13835, "desc": "19:15 해물밥 만찬", "details": "원조 해물밥(Arroz de Marisco) 4.4★ (숙소 도보 2분 복귀)"}], "1_2": [{"num": 1, "name": "☕ 바이탈에그미나", "lat": 38.7145, "lng": -9.1396, "desc": "09:30 브런치 & 커피", "details": "숙소 도보 2분 프리미엄 에그 베네딕트 4.9★"}, {"num": 2, "name": "🏛️ 카르무 광장 & 산타주스타", "lat": 38.7123, "lng": -9.1402, "desc": "10:30 상단 무료 뷰", "details": "수녀원 뒤편 평지 통로로 산타 주스타 상단 무료 조망"}, {"num": 3, "name": "📚 베르트랑 서점", "lat": 38.7107, "lng": -9.1415, "desc": "11:30 세계 최고(最古) 서점", "details": "1732년 설립 기네스북 세계 최고(最古) 운영 서점 타일 회랑"}, {"num": 4, "name": "☕ The Folks Chiado", "lat": 38.7109, "lng": -9.1405, "desc": "12:00 스페셜티 커피", "details": "스페셜티 커피 & 에그타르트 휴식 4.8★"}, {"num": 5, "name": "🍽️ 사크라멘투 두 치아두", "lat": 38.7115, "lng": -9.1413, "desc": "12:30 바칼라우/오리밥", "details": "정갈한 포르투갈 전통 정찬 4.5★"}, {"num": 6, "name": "🏨 숙소 (낮잠 휴식)", "lat": 38.71465, "lng": -9.13883, "desc": "13:45 침대 2시간 휴식", "details": "침대 낮잠 휴식으로 체력 충전", "isHotel": true}, {"num": 7, "name": "🏛️ 상 도밍구스 성당", "lat": 38.7149, "lng": -9.1384, "desc": "15:45 화재 흔적 성당", "details": "1959년 대화재 흔적을 보존한 웅장하고 숙연한 13세기 역사 성당"}, {"num": 8, "name": "🍷 A Ginjinha", "lat": 38.7145, "lng": -9.1389, "desc": "16:30 원조 체리주", "details": "1840년 창업 리스본 대표 체리 리큐어 1잔(€1.50) 시음"}, {"num": 9, "name": "🛒 핑구 도스 마트", "lat": 38.7149, "lng": -9.1404, "desc": "17:00 신선 장보기", "details": "새우, 안심 스테이크, 과일, 그린와인 신선 장보기"}, {"num": 10, "name": "🌳 숙소 홈쿠킹", "lat": 38.71465, "lng": -9.13883, "desc": "18:00 스테이크/감바스", "details": "숙소 주방에서 안심 스테이크, 감바스 알 아히요 만찬", "isHotel": true}], "1_3": [{"num": 1, "name": "🏛️ 제로니무스 수도원", "lat": 38.6979, "lng": -9.2064, "desc": "09:00 오픈런 관람", "details": "마누엘 양식의 화려한 2층 석조 회랑 (리스보아 카드 무료)"}, {"num": 2, "name": "🥧 파스테이스 드 벨렝", "lat": 38.6975, "lng": -9.2032, "desc": "10:30 원조 에그타르트", "details": "1837년 창업 원조 에그타르트 & 커피 브런치"}, {"num": 3, "name": "🏛️ 국립 마차 박물관", "lat": 38.6968, "lng": -9.1988, "desc": "11:30 황금 마차 관람", "details": "포르투갈 왕실 황금 마차 컬렉션 (에어컨 실내 관람)"}, {"num": 4, "name": "🏛️ 발견기념비", "lat": 38.6936, "lng": -9.2057, "desc": "12:15 대항해시대 기념비", "details": "거대 범선 모양 탐험가 기념비 & 바닥 세계지도"}, {"num": 5, "name": "🏛️ 벨렝탑", "lat": 38.6916, "lng": -9.216, "desc": "12:30 요새 탑 외관", "details": "테주 강변 물 위에 떠 있는 듯한 요새 탑"}, {"num": 6, "name": "🍽️ 타임아웃 마켓", "lat": 38.7071, "lng": -9.146, "desc": "13:10 미식 푸드홀 점심", "details": "리스본 최고 셰프들의 푸드홀 점심 식사"}, {"num": 7, "name": "🏨 숙소 (낮잠 휴식)", "lat": 38.71465, "lng": -9.13883, "desc": "14:45 침대 낮잠 충전", "details": "15E 트램 복귀 후 1시간 45분 낮잠 휴식", "isHotel": true}, {"num": 8, "name": "📸 산타루치아 전망대", "lat": 38.7119, "lng": -9.1305, "desc": "17:00 아줄레주 & 타구스강", "details": "푸른 아줄레주와 꽃덩굴 아래 타구스강 파노라마 조망"}, {"num": 9, "name": "📸 포르타스 두 솔", "lat": 38.7122, "lng": -9.13, "desc": "17:30 알파마 테라코타 뷰", "details": "알파마 오렌지빛 테라코타 지붕 파노라마"}, {"num": 10, "name": "🏰 상 조르즈 성", "lat": 38.7139, "lng": -9.1335, "desc": "17:40 성벽 황금빛 일몰", "details": "고성 성벽에서 바라보는 리스본 황금빛 일몰"}, {"num": 11, "name": "🍷 클루브 드 파두", "lat": 38.7107, "lng": -9.1305, "desc": "19:20 전통 파두 디너", "details": "리스본 최고 전통 파두 하우스 라이브 정찬 4.4★"}], "1_4": [{"num": 1, "name": "☕ 바이탈에그미나", "lat": 38.7145, "lng": -9.1396, "desc": "08:30 브런치 & 커피", "details": "숙소 도보 2분 프리미엄 브런치"}, {"num": 2, "name": "🏛️ 호시우 기차역", "lat": 38.7146, "lng": -9.1408, "desc": "09:30 네오 마누엘 외관", "details": "19세기 네오 마누엘 양식 쌍둥이 말발굽 아치 포토존"}, {"num": 3, "name": "🥧 만테이가리아 아우구스타", "lat": 38.7118, "lng": -9.1385, "desc": "10:00 기차 간식 포장", "details": "기차 안에서 먹을 갓 구운 에그타르트(상자) 포장"}, {"num": 4, "name": "🏨 숙소 (11:00 체크아웃)", "lat": 38.71465, "lng": -9.13883, "desc": "10:30 짐정리 & 퇴실", "details": "30분 짐정리 후 11:00 정시 퇴실 ➔ 우버 탑승", "isHotel": true}, {"num": 5, "name": "🚆 산타 아폴로니아 역", "lat": 38.7138, "lng": -9.1232, "desc": "11:20 도착 ➔ 12:00 기차", "details": "11:20 도착 ➔ 12:00 CP Alfa Pendular AP 125 포르투행 열차 출발"}], "2_4": [{"num": 1, "name": "🏛️ 상벤투 기차역", "lat": 41.14549, "lng": -8.60954, "desc": "15:00 2만 장 아줄레주 관람", "details": "15:00 도착 후 역사 대합실 2만 장 아줄레주 벽화 관람"}, {"num": 2, "name": "☕ 숙소 앞 카페", "lat": 41.1452, "lng": -8.6105, "desc": "15:25 디저트 & 체크인 대기", "details": "Soul & Sip Douro(4.9★) / Esquires(4.7★)에서 16시 체크인 대기"}, {"num": 3, "name": "🏨 포르투 숙소", "lat": 41.14532, "lng": -8.61122, "desc": "16:00 체크인 & 1.5시간 낮잠", "details": "16:00 정시 입실 ➔ 1.5시간 침대 낮잠 휴식", "isHotel": true}, {"num": 4, "name": "🏛️ 자유 광장 & 시청사", "lat": 41.1486, "lng": -8.6109, "desc": "17:30 시청사 야경 포토존", "details": "웅장한 시청사 야경 및 'Porto' 조형물 포토존 (완전 평지)"}, {"num": 5, "name": "🚶‍♂️ 플로레스 거리", "lat": 41.1444, "lng": -8.61283, "desc": "18:15 꽃의 거리 산책", "details": "가로등과 버스킹이 예쁜 보행자 전용 꽃의 거리 낭만 산책"}, {"num": 6, "name": "🍽️ Muu Steakhouse", "lat": 41.1492, "lng": -8.6125, "desc": "19:15 4.9★ 스테이크 만찬", "details": "포르투 1위 4.9★ 스테이크 명가 (숙소 도보 2분 평지 귀가)"}], "2_5": [{"num": 1, "name": "🏛️ 산투 일드폰수 성당", "lat": 41.1465, "lng": -8.6058, "desc": "08:30 외벽 아줄레주", "details": "11,000장의 푸른 아줄레주 타일 벽화 외관 포토존"}, {"num": 2, "name": "🛍️ 볼량 시장 & 알마스 성당", "lat": 41.1488, "lng": -8.6062, "desc": "09:00 신선 과일 조식", "details": "120년 전통 로컬 마켓(납작복숭아) & Capela das Almas 아줄레주"}, {"num": 3, "name": "🏨 숙소 (짐보관/휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "10:30 45분 침대 휴식", "details": "볼량 시장 짐 보관 & 45분 침대 휴식", "isHotel": true}, {"num": 4, "name": "🏛️ 클레리구스 성당", "lat": 41.14567, "lng": -8.6146, "desc": "12:00 무료 오르간 콘서트", "details": "12:00~12:30 매일 정오 파이프 오르간 라이브 무료 연주 (30분 착석)"}, {"num": 5, "name": "📚 렐루 외관 & 카르무 성당", "lat": 41.14735, "lng": -8.61627, "desc": "12:35 아치 외관 & 대형 아줄레주", "details": "렐루 서점 외관 ➔ 카르무 성당 대형 외벽 아줄레주 감상"}, {"num": 6, "name": "🍽️ Do Norte Café", "lat": 41.148, "lng": -8.6138, "desc": "12:50 4.9★ 수제 브런치", "details": "카르무 성당 도보 2분 4.9★ 브런치 점심 식사"}, {"num": 7, "name": "🌳 수정궁 & 감정의 정원", "lat": 41.14827, "lng": -8.62552, "desc": "14:00 도루강 하구 뷰", "details": "차량 4분 이동 ➔ 그늘 숲길, 공작새, 감정의 정원 테라스 벤치 힐링"}, {"num": 8, "name": "🏨 숙소 (낮잠 휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "15:30 2시간 침대 낮잠", "details": "2시간 동안 편안한 침대 낮잠으로 저녁 일몰 체력 충전", "isHotel": true}, {"num": 9, "name": "🌳 모루 정원 & 세하 두 필라르", "lat": 41.1378, "lng": -8.6092, "desc": "17:30 황금빛 일몰 & 야경", "details": "동루이스 다리 상층 보행 ➔ 모루 정원 & 세하 두 필라르 일몰 감상 [선택: 17:00 유람선]"}, {"num": 10, "name": "🍽️ Casa D'Minha Avó", "lat": 41.1362, "lng": -8.6083, "desc": "19:15 4.9★ 정통 가정식 만찬", "details": "모루 정원 도보 3분 4.9★ 정통 가정식 만찬 (화요일 정상 영업!)"}], "2_6": [{"num": 1, "name": "☕ 아침 조식 (Soul & Sip)", "lat": 41.1452, "lng": -8.6105, "desc": "08:30 스페셜티 커피", "details": "숙소 도보 2분 스페셜티 드립 커피 & 브런치 4.9★"}, {"num": 2, "name": "🏛️ 포르투 대성당 테라스", "lat": 41.1428, "lng": -8.6111, "desc": "09:30 구시가지 지붕 파노라마", "details": "아침 햇살 아래 구시가지 지붕 파노라마 20분 쾌속 조망"}, {"num": 3, "name": "🥧 Castro 에그타르트", "lat": 41.1436, "lng": -8.612, "desc": "10:00 4.8★ 명품 타르트 티타임", "details": "유리창 너머 갓 구워내는 따뜻하고 바삭한 타르트 & 커피 4.8★"}, {"num": 4, "name": "🏛️ 볼사 궁전 & 인판테 광장", "lat": 41.1415, "lng": -8.6155, "desc": "10:45 신고전주의 궁전 & 강변 산책", "details": "Castro에서 완만한 내리막 4분, 볼사 궁전 & 성 프란시스코 성당 외관 및 인판테 광장 벤치 쉼"}, {"num": 5, "name": "🍽️ Meia-Nau Porto", "lat": 41.1408, "lng": -8.6152, "desc": "11:45 4.9★ 문어구이 점심", "details": "부드러운 숯불 문어구이 & 신선한 해산물 점심 4.9★"}, {"num": 6, "name": "🏨 숙소 (낮잠 전면 휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "13:00 2.5시간 침대 낮잠", "details": "짐 정리 부담 없이 온전히 에어컨 침대 낮잠 전면 휴식", "isHotel": true}, {"num": 7, "name": "🚋 1번 빈티지 트램 탑승", "lat": 41.1405, "lng": -8.6155, "desc": "15:30 낭만 트램 20분 이동", "details": "15:30 숙소 출발 ➔ Infante에서 1번 목조 트램(대기 포함 60분 버퍼) 탑승"}, {"num": 8, "name": "🏛️ 파세이우 알레그레 & Tavi", "lat": 41.1485, "lng": -8.6705, "desc": "16:30 야자수 공원 & 오션뷰 카페", "details": "야자수 정원 산책 또는 Tavi 1935 오션뷰 테라스 티타임"}, {"num": 9, "name": "🗼 펠게이라스 등대 일몰", "lat": 41.1465, "lng": -8.6815, "desc": "18:15 대서양 수평선 일몰", "details": "대서양 수평선으로 붉게 떨어지는 장엄한 바다 일몰 & 파도 포토타임"}, {"num": 10, "name": "🍽️ Tapabento S.Bento", "lat": 41.14549, "lng": -8.60954, "desc": "20:00 포르투 1위 미식 만찬", "details": "수요일 19:00~22:00 정상 영업 소꼬리찜 & 해산물 만찬 (파두 선택 가능)"}], "2_7": [{"num": 1, "name": "☕ 조식 (Soul & Sip 4.9★)", "lat": 41.1452, "lng": -8.6105, "desc": "08:15 브런치 & 커피"}, {"num": 2, "name": "🏨 포르투 숙소 (09:35 퇴실)", "lat": 41.14532, "lng": -8.61122, "desc": "09:35 최종 짐점검 & 퇴실 ➔ 우버 탑승", "isHotel": true}, {"num": 3, "name": "🛫 포르투 공항 OPO (10:00 도착)", "lat": 41.2356, "lng": -8.6814, "desc": "10:00 도착 (출발 2시간 전) ➔ 12:00 라이언에어 이륙"}], "3_7": [{"num": 1, "name": "✈️ BCN 공항 T2 도착", "lat": 41.3033, "lng": 2.0743, "desc": "14:45 착륙 ➔ 수하물 수취"}, {"num": 2, "name": "🚌 Sarfa 직행 버스 승차", "lat": 41.3035, "lng": 2.0745, "desc": "16:00 출발 ➔ 토사델마르 직행"}, {"num": 3, "name": "🏨 호텔 델핀 (Hotel Delfín)", "lat": 41.7214, "lng": 2.9315, "desc": "17:40 체크인 & 1시간 침대 휴식", "isHotel": true}, {"num": 4, "name": "🏖️ 플랏자 그란 해변 & 고성", "lat": 41.7188, "lng": 2.9328, "desc": "18:45 해변 산책 & 빌라 벨라 노을"}, {"num": 5, "name": "🍽️ Restaurant Tursia (4.8★)", "lat": 41.7208, "lng": 2.9318, "desc": "19:30 지중해 해산물 빠에야 만찬"}], "3_8": [{"num": 1, "name": "🏨 호텔 델핀 조식", "lat": 41.7214, "lng": 2.9315, "desc": "08:30 지중해식 조식 뷔페", "isHotel": true}, {"num": 2, "name": "🏰 성벽 입구 (Muralles)", "lat": 41.71713, "lng": 2.93302, "desc": "09:30 중세 성벽길 진입"}, {"num": 3, "name": "🗼 토사 등대 & Bar del Far", "lat": 41.71579, "lng": 2.93377, "desc": "10:30 절벽 테라스 카페 쉼"}, {"num": 4, "name": "🏛️ 에스 코돌라르 해변", "lat": 41.71593, "lng": 2.93252, "desc": "11:30 하산 [선택: 파시엔시아 4.9★]"}, {"num": 5, "name": "🍽️ Pou de la Vila (4.7★)", "lat": 41.71938, "lng": 2.93197, "desc": "12:00 카탈루냐 가정식 점심"}, {"num": 6, "name": "🏖️ 플랏자 그란 해수욕", "lat": 41.72056, "lng": 2.93389, "desc": "13:30 2시간 해수욕 & 선베드 쉼"}, {"num": 7, "name": "🏛️ 구시가지 쇼핑 & 노을", "lat": 41.72, "lng": 2.931, "desc": "17:45 에스파드류 쇼핑 & 젤라토"}, {"num": 8, "name": "🍽️ Restaurant Tursia (4.8★)", "lat": 41.72157, "lng": 2.93361, "desc": "19:15 해산물 모둠 구이 만찬"}], "3_9": [{"num": 1, "name": "🏨 호텔 델핀 조식", "lat": 41.7214, "lng": 2.9315, "desc": "08:30 조식 뷔페", "isHotel": true}, {"num": 2, "name": "🚏 토사 버스 터미널", "lat": 41.7215, "lng": 2.9282, "desc": "10:15 사르파 버스 탑승"}, {"num": 3, "name": "🚏 바르셀로나 북부터미널", "lat": 41.39469, "lng": 2.18337, "desc": "11:45 도착 ➔ L1 지하철 이동"}, {"num": 4, "name": "🏛️ Arc de Triomf역 (L1)", "lat": 41.392, "lng": 2.181, "desc": "L1 직행 탑승 (8분 주파)"}, {"num": 5, "name": "🏨 Occidental 1929 (짐보관)", "lat": 41.37537, "lng": 2.14763, "desc": "12:10 도착 & 짐 보관", "isHotel": true}], "4_9": [{"num": 1, "name": "🏛️ 아레나스 쇼핑몰", "lat": 41.3762, "lng": 2.1492, "desc": "11:50 쇼핑 & 전망대", "details": "패션/잡화 매장 둘러보기 & 5층 루프탑 무료 원형 전망대 감상"}, {"num": 2, "name": "🍽️ KimchiMama", "lat": 41.37594, "lng": 2.14344, "desc": "13:30 한식 오픈런 점심", "details": "든든하고 칼칼한 김치찌개 & 불고기 만찬 (4.8★)"}, {"num": 3, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "14:30 정시 체크인 & 환복", "details": "Occidental Barcelona 1929 객실 입실 및 정돈", "isHotel": true}, {"num": 4, "name": "☕ Salts 테라스 바", "lat": 41.36941, "lng": 2.16423, "desc": "15:15 올림픽 풀 뷰 티타임", "details": "택시 등반 ➔ 올림픽 다이빙 풀 & 바르셀로나 시내 스카이라인 조망"}, {"num": 5, "name": "📸 알칼데 전망대", "lat": 41.3687, "lng": 2.1683, "desc": "16:00 바다·항구 파노라마 뷰", "details": "지중해 바다와 크루즈 항구가 한눈에 내려다보이는 최고의 오션뷰 스팟 (4.6★)"}, {"num": 6, "name": "🌳 호안 브로사 정원", "lat": 41.3684, "lng": 2.1638, "desc": "16:45 돗자리 쉼 & 잔디밭", "details": "울창한 지중해 소나무 숲과 넓은 잔디 광장, 돗자리 펴고 편안히 힐링하기 최적"}, {"num": 7, "name": "🏛️ 그리스 극장 & 라리발 정원", "lat": 41.3698, "lng": 2.1585, "desc": "17:45 신전풍 극장 & 분수 회랑", "details": "그리스 신전풍 야외극장 무대 ➔ 라리발 아랍식 분수 회랑(Font del Gat) 산책"}, {"num": 8, "name": "🌅 MNAC 궁전 계단 테라스", "lat": 41.36877, "lng": 2.15336, "desc": "19:00~19:50 일몰 & 매직아워", "details": "19:00 정각 도착 착석 ➔ 버스커 라이브 & 19:22 정시 일몰 & 19:50 매직아워 야경 직관"}, {"num": 9, "name": "🍽️ IL Golfo Di Napoli / TAPS Bar", "lat": 41.37229, "lng": 2.15529, "desc": "20:00 나폴리 화덕피자 / 타파스", "details": "20:00 정시 오픈런 나폴리 화덕피자 또는 감성 타파스 만찬"}, {"num": 10, "name": "⛲ 몬주익 마법의 분수", "lat": 41.37116, "lng": 2.15174, "desc": "21:00 매직 분수 쇼 직관", "details": "음악과 오색 조명의 화려한 분수 쇼 직관 (뒤편 4개의 기둥 입체 뷰 연계)"}], "4_10": [{"num": 1, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "08:30 출발 & 숙소", "details": "Occidental Barcelona 1929 숙소", "isHotel": true}, {"num": 2, "name": "🍽️ La Terraza Miró", "lat": 41.3768, "lng": 2.1465, "desc": "08:30 테라스 조식", "details": "숙소 도보 3분! 야외 테라스에서 즐기는 여유로운 아침 조식 (4.7★)"}, {"num": 3, "name": "🏛️ 카탈루냐 국립미술관 (MNAC)", "lat": 41.36877, "lng": 2.15336, "desc": "10:00~13:00 3시간 무료 관람", "details": "매월 첫째 일요일 전면 무료 개방! 로마네스크 벽화 & 돔 오발 홀 3시간 풀 관람"}, {"num": 4, "name": "🌳 호안 마라갈 정원", "lat": 41.3667, "lng": 2.1517, "desc": "13:00~13:40 왕실 분수정원", "details": "주말 10:00~15:00 한정 개방 명소! 스페인 국왕 영빈관 알베니스 궁전 정원 산책"}, {"num": 5, "name": "🍽️ Mar i Terra Arenas", "lat": 41.3762, "lng": 2.1492, "desc": "13:45 몬주익 뷰 점심", "details": "아레나스 쇼핑몰 5층 루프탑! 몬주익 궁전을 내려다보며 즐기는 해산물 빠에야 (4.8★)"}, {"num": 6, "name": "🏰 구엘 저택 (Palau Güell)", "lat": 41.3792, "lng": 2.1742, "desc": "16:30 예약 관람", "details": "가우디의 초기 유네스코 세계유산 대저택! 중앙 돔 홀 & 옥상 예술 굴뚝 (16:30~18:00)"}, {"num": 7, "name": "🍽️ 레이알 광장 (이른 저녁)", "lat": 41.3795, "lng": 2.176, "desc": "18:00~19:00 이른 저녁", "details": "구엘 저택 도보 3분! 레이알 광장 테라스(Les Quinze Nits 등) 또는 타파스 명가에서 여유롭고 든든한 식사"}, {"num": 8, "name": "🏛️ 고딕 & 보른 야경 투어", "lat": 41.38, "lng": 2.1755, "desc": "19:00~20:45 야경 투어", "details": "레이알 광장 미팅(19:00) ➔ 츄레리아(츄러스) ➔ 산펠립네리 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르 성당 ➔ 메모리알 1714 종료"}, {"num": 9, "name": "⛪ 산타 마리아 델 마르 & 메모리알 1714", "lat": 41.3836, "lng": 2.1821, "desc": "21:30 투어 종료 & 택시 복귀", "details": "보른 지구 투어 종료 지점 앞 대로변에서 택시 승차 ➔ 숙소(Occidental 1929) 15분 만에 편안하게 복귀"}],   
-"4_11": [{"num": 1, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "09:30 체크아웃", "details": "Occidental Barcelona 1929 숙소 체크아웃 출발", "isHotel": true}, {"num": 2, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "09:45 짐 사전 보관", "details": "그라나다 복귀 후 투숙할 5성급 호텔 컨시어지에 대형 캐리어 사전 보관", "isHotel": true}, {"num": 3, "name": "🏰 구엘 공원 후문", "lat": 41.4172, "lng": 2.1528, "desc": "10:00~12:00 2시간 관람", "details": "고지대 후문 입장 ➔ 물결 벤치 광장 & 파도 회랑 & 도마뱀 분수대 (내리막 관람)"}, {"num": 4, "name": "🏛️ 까사 밀라 (La Pedrera)", "lat": 41.3952, "lng": 2.1619, "desc": "12:30 파사드 감상", "details": "24번 버스 직통 12:30 도착! 파도치는 석회암 파사드 감상 및 포토타임"}, {"num": 5, "name": "🏛️ 까사 바트요 (Casa Batlló)", "lat": 41.3917, "lng": 2.1649, "desc": "13:15 파사드 감상", "details": "그라시아 대로 내리막 도보 8분(500m)! 알록달록 바다 모자이크와 뼈의 집 외관 감상"}, {"num": 6, "name": "🍽️ Vinitus / Ciudad Condal", "lat": 41.3899, "lng": 2.1609, "desc": "14:00 타파스 점심", "details": "까사 바트요 도보 3분! 꿀대구 & 수제 감바스 알 아히요 만찬"}, {"num": 7, "name": "🏛️ 바르셀로나 개선문", "lat": 41.391, "lng": 2.1806, "desc": "15:00 광장 포토존", "details": "식당에서 택시 6분 이동! 1888 만국박람회 붉은 벽돌 개선문 포토타임"}, {"num": 8, "name": "🌳 시우타델라 공원", "lat": 41.3882, "lng": 2.1874, "desc": "15:30 호수 벤치 쉼", "details": "대분수(Cascada) & 호수 주변 그늘 벤치 힐링 (100% 평지)"}, {"num": 9, "name": "☕ 카탈루냐 광장 & Almanac", "lat": 41.387, "lng": 2.17, "desc": "16:30 티타임 휴식", "details": "호텔 라운지/카페에서 비행 전 다리 푹 쉬며 티타임 & 1박용 짐 점검", "isHotel": true}, {"num": 10, "name": "🚌 카탈루냐 광장 Aerobus", "lat": 41.3875, "lng": 2.1695, "desc": "18:30 공항버스 탑승", "details": "카탈루냐 광장 ➔ BCN T1 직행 Aerobus A1 탑승"}, {"num": 11, "name": "✈️ 바르셀로나 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "19:15 도착 & 21:15 비행", "details": "부엘링 VY2018 항공편으로 그라나다 이동"}], "5_11": [{"num": 1, "name": "🛬 그라나다 공항 (GRX)", "lat": 37.1887, "lng": -3.77736, "desc": "22:45 착륙 & 짐 찾기", "details": "부엘링 VY2018 바르셀로나 출발편 착륙 ➔ 수하물 수거 후 청사 앞 공식 택시 승강장 이동"}, {"num": 2, "name": "🚕 공항 택시 승강장", "lat": 37.1882, "lng": -3.778, "desc": "23:15 공항 택시 탑승", "details": "공식 택시 탑승 ➔ 고속도로 경유 시내 중심 숙소 직통 이동 (약 25~30분, 정찰 야간 요금 약 €25~30)"}, {"num": 3, "name": "🏨 Hotel Puerta de las Granadas", "lat": 37.17623, "lng": -3.5952, "desc": "23:45 체크인 & 취침", "details": "알함브라 숲길 진입로 입구(Cuesta de Gomérez 16) 위치 부티크 호텔 체크인 & 취침", "isHotel": true}], "5_12": [{"num": 1, "name": "🍽️ Cafetería d'Sano", "lat": 37.17845, "lng": -3.60265, "desc": "07:30 조식 & 체크아웃", "details": "그라나다 1위 조식 명소 (4.8★) / 하몽 토스트 & 착즙 오렌지 주스 / ★08:15 출발 전 1박용 짐을 메고 체크아웃 완료 (호텔 복귀 불필요!)"}, {"num": 2, "name": "🚶 Cuesta de Gomérez 숲길", "lat": 37.1755, "lng": -3.5935, "desc": "08:15 숲길 도보 산책", "details": "숙소 바로 앞 완만한 숲길 산책로 도보 10~12분(700m) 또는 플라사 누에바 C30 미니버스(5분)"}, {"num": 3, "name": "🏛️ 알함브라 투어 미팅 장소", "lat": 37.17368, "lng": -3.58382, "desc": "08:30 정시 미팅", "details": "Pabellón de Acceso (티켓 오피스 앞) 가이드 미팅 & 여권 원본 확인"}, {"num": 4, "name": "🏛️ 나스르 궁전", "lat": 37.17741, "lng": -3.58968, "desc": "09:00 정시 지정 입장", "details": "★09:00 정시 지정 입장 (지각 시 입장 불가)! 사자의 중정, 아라야네스 중정 등 이슬람 예술의 절정"}, {"num": 5, "name": "🏛️ 카를로스 5세 궁전", "lat": 37.17682, "lng": -3.58995, "desc": "10:30 원형 열주 중정", "details": "르네상스 양식의 거대한 2층 원형 열주 중정"}, {"num": 6, "name": "🏰 알카사바 요새", "lat": 37.17704, "lng": -3.5916, "desc": "11:15 벨라의 탑 조망", "details": "알함브라 최고령 군사 요새 / 벨라의 탑에서 시에라네바다 설산 & 시내 조망"}, {"num": 7, "name": "🌸 헤네랄리페", "lat": 37.178, "lng": -3.58548, "desc": "11:50 분수 정원 & 별궁", "details": "술탄의 여름 별장 & 아세키아 수로 분수 정원 산책"}, {"num": 8, "name": "🍽️ La Auténtica Carmela", "lat": 37.17637, "lng": -3.59695, "desc": "12:30 타파스 점심", "details": "숲길 도보 10분 하산 ➔ 플라사 누에바 정통 안달루시아 타파스 명가 점심 식사"}, {"num": 9, "name": "🏛️ 산 니콜라스 전망대", "lat": 37.18111, "lng": -3.59266, "desc": "14:00 설산 & 알함브라 뷰", "details": "C31·C32 미니버스(€1.40) 탑승 ➔ 알함브라 전경과 만년설 조망 최고 포토존"}, {"num": 10, "name": "☕ 플라사 누에바 노천 카페", "lat": 37.17685, "lng": -3.59604, "desc": "15:30 카페 휴식 & 티타임", "details": "미니버스 하산 ➔ 플라사 누에바 테라스 카페에서 시원한 음료/차 마시며 휴식 (짐 수거 복귀 불필요!)"}, {"num": 11, "name": "🚕 플라사 누에바 택시 승강장", "lat": 37.1767, "lng": -3.5959, "desc": "16:00 공항 택시 탑승", "details": "광장 앞 공식 택시 승강장에서 공항 택시 탑승 (소요 시간 25~30분, 약 €25~30)"}, {"num": 12, "name": "🛫 그라나다 공항 도착", "lat": 37.1887, "lng": -3.77736, "desc": "16:30 공항 수속 & 대기", "details": "출발 1시간 25분 전 공항 도착 ➔ 여유로운 보안검색 및 게이트 대기"}, {"num": 13, "name": "✈️ 부엘링 VY2017 탑승", "lat": 37.189, "lng": -3.7785, "desc": "17:55 이륙 ➔ 바르셀로나", "details": "그라나다(GRX) ➔ 바르셀로나(BCN T1) 이동"}], "6_12": [{"num": 1, "name": "🛬 BCN 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "19:25 착륙 & 입국", "details": "그라나다발 부엘링 VY2017 착륙 ➔ 위탁수하물 대기 없이 신속히 출국장 택시 승강장 이동"}, {"num": 2, "name": "🚕 택시 승강장", "lat": 41.2885, "lng": 2.074, "desc": "20:00 택시 탑승", "details": "공항 공식 택시 탑승 ➔ 호텔 정문 직행 (약 20~25분 소요, 약 €30~35)"}, {"num": 3, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "20:35 체크인 & 짐수령", "details": "Gran Via 619-621 최고급 5성급 숙소 입실 ➔ 미리 맡겨둔 대형 캐리어 수령 & 갤러리룸 입실", "isHotel": true}, {"num": 4, "name": "🍽️ Batea / El Nacional", "lat": 41.3908, "lng": 2.1682, "desc": "21:00 호텔 주변 저녁", "details": "호텔 도보 1~3분 Batea(4.7★ 해산물 다이닝) 또는 El Nacional(4.4★ 웅장한 아르누보 푸드홀) 만찬"}], "6_13": [{"num": 1, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "08:30 5성급 조식 & 출발", "details": "Almanac Barcelona 5성급 호텔 조식 뷔페 (★예약에 조식 포함!) ➔ 10:00 쇼핑 출발", "isHotel": true}, {"num": 2, "name": "🏛️ 그라시아 쇼핑 거리", "lat": 41.3895, "lng": 2.1648, "desc": "10:00 로에베 & 명품 쇼핑", "details": "로에베 플래그십(카사 례오 모레라), 마시모 두띠, 산타 에울랄리아 명품 의류/가죽 쇼핑 (완전 평지)"}, {"num": 3, "name": "🛬 엘 코르테 잉글레스", "lat": 41.3872, "lng": 2.1698, "desc": "11:30 고메 식품관 선물", "details": "지하 Club del Gourmet: 최고급 5J 하몽 이베리코 진공팩, 오로 바일렌 올리브유, 수제 투론 쇼핑 ➔ 호텔 객실 짐 보관"}, {"num": 4, "name": "⭐ Caelis (미슐랭 1스타)", "lat": 41.3868, "lng": 2.1738, "desc": "12:30 미슐랭 런치 코스", "details": "Hotel Ohla 1층 (호텔 도보 8분). 수요일 정시 오픈런! 전설의 런치 코스(Menú Caelis 1인 €65) 또는 테이스팅 코스"}, {"num": 5, "name": "🏨 숙소 (낮잠 휴식)", "lat": 41.3905, "lng": 2.1678, "desc": "14:30 침대 낮잠 완충", "details": "객실 복귀 ➔ 샤워 및 1시간 30분 침대 낮잠으로 오후 사그라다 파밀리아 관람 체력 100% 충전", "isHotel": true}, {"num": 6, "name": "🏛️ 사그라다 파밀리아", "lat": 41.4036, "lng": 2.1744, "desc": "16:30 공식 투어 (확정)", "details": "★16:30 정시 지정 입장 (Marina 입구). 서쪽 스테인드글라스 황금빛 석양 빛내림 & 공식 오디오가이드"}, {"num": 7, "name": "📸 가우디 광장 연못", "lat": 41.4042, "lng": 2.1755, "desc": "19:00 성당 반영 야경", "details": "성당 앞 연못에 비치는 성당 반영(Reflection) 야경 감상 & 인생 기념사진 촬영"}, {"num": 8, "name": "🍽️ Quesarium / Vinitus", "lat": 41.3948, "lng": 2.1632, "desc": "19:30 저녁 식사", "details": "그라시아 복귀 ➔ Quesarium(4.8★ 치즈/와인 타파스) 또는 Vinitus(꿀대구 타파스) 만찬"}, {"num": 9, "name": "📸 Azimuth 루프탑 바", "lat": 41.3905, "lng": 2.1678, "desc": "21:00 루프탑 야경 & 쉼", "details": "Almanac 호텔 8층 루프탑에서 사그라다 파밀리아 실루엣과 바르셀로나 도심 야경 감상 & 숙면", "isHotel": true}], "6_14": [{"num": 1, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "08:30 조식 & 12:00 체크아웃", "details": "Almanac Barcelona 5성급 호텔 조식 뷔페 (★예약 포함) ➔ 11:30 객실 패킹 & 12:00 정시 체크아웃", "isHotel": true}, {"num": 2, "name": "🏛️ 카사 바트요", "lat": 41.3917, "lng": 2.1649, "desc": "10:00 가우디 파사드 감상", "details": "그라시아 대로 도보 3분! 아침 햇살을 받는 카사 바트요 외관 감상 및 기념사진"}, {"num": 3, "name": "🏛️ 카사 밀라 (라 페드레라)", "lat": 41.3952, "lng": 2.1619, "desc": "10:30 파도치는 파사드", "details": "그라시아 대로 평지 산책 ➔ 카사 밀라 외관 감상 & 테라스 카페 커피 쉼"}, {"num": 4, "name": "🛬 엘 코르테 잉글레스", "lat": 41.3872, "lng": 2.1698, "desc": "11:00 고메관 선물 쇼핑", "details": "지하 Club del Gourmet: 5J 하몽, 오로 바일렌 올리브유, 수제 투론 마지막 쇼핑"}, {"num": 5, "name": "🍽️ Batea / El Nacional", "lat": 41.3908, "lng": 2.1682, "desc": "12:00 고별 점심 식사", "details": "호텔 도보 1~3분 Batea(4.7★ 해산물) 또는 El Nacional(4.4★ 푸드홀)에서 마지막 오찬"}, {"num": 6, "name": "🛫 BCN 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "13:45 도착 ➔ 16:35 출국", "details": "택시 25분 직행 ➔ DIVA 텍스리펀 승인 & 카타르항공 QR 146 출국 수속"}]};   
+const WAYPOINTS_DATA = {"1_1": [{"num": 1, "name": "🛬 리스본 공항 T1", "lat": 38.7756, "lng": -9.129, "desc": "13:40 입국 & 카드수령", "details": "입국장 Ask Me Lisboa에서 리스보아 카드 실물 바우처 수령 ➔ 우버 탑승"}, {"num": 2, "name": "🏨 숙소 (R. do Regedor)", "lat": 38.71465, "lng": -9.13883, "desc": "15:00 체크인 & 낮잠", "details": "호스트 Vitor 숙소 체크인 및 2시간 침대 낮잠 휴식", "isHotel": true}, {"num": 3, "name": "🏛️ 피게이라 광장", "lat": 38.7133, "lng": -9.1376, "desc": "17:00 평지 산책", "details": "숙소 바로 앞 완전 평지 광장 산책, 주앙 1세 동상"}, {"num": 4, "name": "🏛️ 호시우 광장", "lat": 38.7138, "lng": -9.1393, "desc": "17:15 물결무늬 광장", "details": "물결무늬 돌바닥(Calçada)과 분수대, 페드로 4세 동상"}, {"num": 5, "name": "🏛️ 헤스타우라도르스 광장", "lat": 38.716, "lng": -9.1419, "desc": "17:30 51E 버스 탑승", "details": "독립기념탑, 아르데코 에덴 극장 건물 ➔ 51E 미니버스 탑승"}, {"num": 6, "name": "🌅 상 페드루 전망대", "lat": 38.715, "lng": -9.1442, "desc": "17:40 붉은 노을 감상", "details": "정원 벤치에 앉아 상 조르즈 성과 리스본 시내 붉은 노을 조망"}, {"num": 7, "name": "🍽️ Marisqueira UMA", "lat": 38.7126, "lng": -9.13835, "desc": "19:15 해물밥 만찬", "details": "원조 해물밥(Arroz de Marisco) 4.4★ (숙소 도보 2분 복귀)"}], "1_2": [{"num": 1, "name": "☕ 바이탈에그미나", "lat": 38.7145, "lng": -9.1396, "desc": "09:30 브런치 & 커피", "details": "숙소 도보 2분 프리미엄 에그 베네딕트 4.9★"}, {"num": 2, "name": "🏛️ 카르무 광장 & 산타주스타", "lat": 38.7123, "lng": -9.1402, "desc": "10:30 상단 무료 뷰", "details": "수녀원 뒤편 평지 통로로 산타 주스타 상단 무료 조망"}, {"num": 3, "name": "📚 베르트랑 서점", "lat": 38.7107, "lng": -9.1415, "desc": "11:30 세계 최고(最古) 서점", "details": "1732년 설립 기네스북 세계 최고(最古) 운영 서점 타일 회랑"}, {"num": 4, "name": "☕ The Folks Chiado", "lat": 38.7109, "lng": -9.1405, "desc": "12:00 스페셜티 커피", "details": "스페셜티 커피 & 에그타르트 휴식 4.8★"}, {"num": 5, "name": "🍽️ 사크라멘투 두 치아두", "lat": 38.7115, "lng": -9.1413, "desc": "12:30 바칼라우/오리밥", "details": "정갈한 포르투갈 전통 정찬 4.5★"}, {"num": 6, "name": "🏨 숙소 (낮잠 휴식)", "lat": 38.71465, "lng": -9.13883, "desc": "13:45 침대 2시간 휴식", "details": "침대 낮잠 휴식으로 체력 충전", "isHotel": true}, {"num": 7, "name": "🏛️ 상 도밍구스 성당", "lat": 38.7149, "lng": -9.1384, "desc": "15:45 화재 흔적 성당", "details": "1959년 대화재 흔적을 보존한 웅장하고 숙연한 13세기 역사 성당"}, {"num": 8, "name": "🍷 A Ginjinha", "lat": 38.7145, "lng": -9.1389, "desc": "16:30 원조 체리주", "details": "1840년 창업 리스본 대표 체리 리큐어 1잔(€1.50) 시음"}, {"num": 9, "name": "🛒 핑구 도스 마트", "lat": 38.7149, "lng": -9.1404, "desc": "17:00 신선 장보기", "details": "새우, 안심 스테이크, 과일, 그린와인 신선 장보기"}, {"num": 10, "name": "🌳 숙소 홈쿠킹", "lat": 38.71465, "lng": -9.13883, "desc": "18:00 스테이크/감바스", "details": "숙소 주방에서 안심 스테이크, 감바스 알 아히요 만찬", "isHotel": true}], "1_3": [{"num": 1, "name": "🏛️ 제로니무스 수도원", "lat": 38.6979, "lng": -9.2064, "desc": "09:00 오픈런 관람", "details": "마누엘 양식의 화려한 2층 석조 회랑 (리스보아 카드 무료)"}, {"num": 2, "name": "🥧 파스테이스 드 벨렝", "lat": 38.6975, "lng": -9.2032, "desc": "10:30 원조 에그타르트", "details": "1837년 창업 원조 에그타르트 & 커피 브런치"}, {"num": 3, "name": "🏛️ 국립 마차 박물관", "lat": 38.6968, "lng": -9.1988, "desc": "11:30 황금 마차 관람", "details": "포르투갈 왕실 황금 마차 컬렉션 (에어컨 실내 관람)"}, {"num": 4, "name": "🏛️ 발견기념비", "lat": 38.6936, "lng": -9.2057, "desc": "12:15 대항해시대 기념비", "details": "거대 범선 모양 탐험가 기념비 & 바닥 세계지도"}, {"num": 5, "name": "🏛️ 벨렝탑", "lat": 38.6916, "lng": -9.216, "desc": "12:30 요새 탑 외관", "details": "테주 강변 물 위에 떠 있는 듯한 요새 탑"}, {"num": 6, "name": "🍽️ 타임아웃 마켓", "lat": 38.7071, "lng": -9.146, "desc": "13:10 미식 푸드홀 점심", "details": "리스본 최고 셰프들의 푸드홀 점심 식사"}, {"num": 7, "name": "🏨 숙소 (낮잠 휴식)", "lat": 38.71465, "lng": -9.13883, "desc": "14:45 침대 낮잠 충전", "details": "15E 트램 복귀 후 1시간 45분 낮잠 휴식", "isHotel": true}, {"num": 8, "name": "📸 산타루치아 전망대", "lat": 38.7119, "lng": -9.1305, "desc": "17:00 아줄레주 & 타구스강", "details": "푸른 아줄레주와 꽃덩굴 아래 타구스강 파노라마 조망"}, {"num": 9, "name": "📸 포르타스 두 솔", "lat": 38.7122, "lng": -9.13, "desc": "17:30 알파마 테라코타 뷰", "details": "알파마 오렌지빛 테라코타 지붕 파노라마"}, {"num": 10, "name": "🏰 상 조르즈 성", "lat": 38.7139, "lng": -9.1335, "desc": "17:40 성벽 황금빛 일몰", "details": "고성 성벽에서 바라보는 리스본 황금빛 일몰"}, {"num": 11, "name": "🍷 클루브 드 파두", "lat": 38.7107, "lng": -9.1305, "desc": "19:20 전통 파두 디너", "details": "리스본 최고 전통 파두 하우스 라이브 정찬 4.4★"}], "1_4": [{"num": 1, "name": "☕ 바이탈에그미나", "lat": 38.7145, "lng": -9.1396, "desc": "08:30 브런치 & 커피", "details": "숙소 도보 2분 프리미엄 브런치"}, {"num": 2, "name": "🏛️ 호시우 기차역", "lat": 38.7146, "lng": -9.1408, "desc": "09:30 네오 마누엘 외관", "details": "19세기 네오 마누엘 양식 쌍둥이 말발굽 아치 포토존"}, {"num": 3, "name": "🥧 만테이가리아 아우구스타", "lat": 38.7118, "lng": -9.1385, "desc": "10:00 기차 간식 포장", "details": "기차 안에서 먹을 갓 구운 에그타르트(상자) 포장"}, {"num": 4, "name": "🏨 숙소 (11:00 체크아웃)", "lat": 38.71465, "lng": -9.13883, "desc": "10:30 짐정리 & 퇴실", "details": "30분 짐정리 후 11:00 정시 퇴실 ➔ 우버 탑승", "isHotel": true}, {"num": 5, "name": "🚆 산타 아폴로니아 역", "lat": 38.7138, "lng": -9.1232, "desc": "11:20 도착 ➔ 12:00 기차", "details": "11:20 도착 ➔ 12:00 CP Alfa Pendular AP 125 포르투행 열차 출발"}], "2_4": [{"num": 1, "name": "🏛️ 상벤투 기차역", "lat": 41.14549, "lng": -8.60954, "desc": "15:00 2만 장 아줄레주 관람", "details": "15:00 도착 후 역사 대합실 2만 장 아줄레주 벽화 관람"}, {"num": 2, "name": "☕ 숙소 앞 카페", "lat": 41.1452, "lng": -8.6105, "desc": "15:25 디저트 & 체크인 대기", "details": "Soul & Sip Douro(4.9★) / Esquires(4.7★)에서 16시 체크인 대기"}, {"num": 3, "name": "🏨 포르투 숙소", "lat": 41.14532, "lng": -8.61122, "desc": "16:00 체크인 & 1.5시간 낮잠", "details": "16:00 정시 입실 ➔ 1.5시간 침대 낮잠 휴식", "isHotel": true}, {"num": 4, "name": "🏛️ 자유 광장 & 시청사", "lat": 41.1486, "lng": -8.6109, "desc": "17:30 시청사 야경 포토존", "details": "웅장한 시청사 야경 및 'Porto' 조형물 포토존 (완전 평지)"}, {"num": 5, "name": "🚶‍♂️ 플로레스 거리", "lat": 41.1444, "lng": -8.61283, "desc": "18:15 꽃의 거리 산책", "details": "가로등과 버스킹이 예쁜 보행자 전용 꽃의 거리 낭만 산책"}, {"num": 6, "name": "🍽️ Muu Steakhouse", "lat": 41.1492, "lng": -8.6125, "desc": "19:15 4.9★ 스테이크 만찬", "details": "포르투 1위 4.9★ 스테이크 명가 (숙소 도보 2분 평지 귀가)"}], "2_5": [{"num": 1, "name": "🏛️ 산투 일드폰수 성당", "lat": 41.1465, "lng": -8.6058, "desc": "08:30 외벽 아줄레주", "details": "11,000장의 푸른 아줄레주 타일 벽화 외관 포토존"}, {"num": 2, "name": "🛍️ 볼량 시장 & 알마스 성당", "lat": 41.1488, "lng": -8.6062, "desc": "09:00 신선 과일 조식", "details": "120년 전통 로컬 마켓(납작복숭아) & Capela das Almas 아줄레주"}, {"num": 3, "name": "🏨 숙소 (짐보관/휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "10:30 45분 침대 휴식", "details": "볼량 시장 짐 보관 & 45분 침대 휴식", "isHotel": true}, {"num": 4, "name": "🏛️ 클레리구스 성당", "lat": 41.14567, "lng": -8.6146, "desc": "12:00 무료 오르간 콘서트", "details": "12:00~12:30 매일 정오 파이프 오르간 라이브 무료 연주 (30분 착석)"}, {"num": 5, "name": "📚 렐루 외관 & 카르무 성당", "lat": 41.14735, "lng": -8.61627, "desc": "12:35 아치 외관 & 대형 아줄레주", "details": "렐루 서점 외관 ➔ 카르무 성당 대형 외벽 아줄레주 감상"}, {"num": 6, "name": "🍽️ Do Norte Café", "lat": 41.148, "lng": -8.6138, "desc": "12:50 4.9★ 수제 브런치", "details": "카르무 성당 도보 2분 4.9★ 브런치 점심 식사"}, {"num": 7, "name": "🌳 수정궁 & 감정의 정원", "lat": 41.14827, "lng": -8.62552, "desc": "14:00 도루강 하구 뷰", "details": "차량 4분 이동 ➔ 그늘 숲길, 공작새, 감정의 정원 테라스 벤치 힐링"}, {"num": 8, "name": "🏨 숙소 (낮잠 휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "15:30 2시간 침대 낮잠", "details": "2시간 동안 편안한 침대 낮잠으로 저녁 일몰 체력 충전", "isHotel": true}, {"num": 9, "name": "🌳 모루 정원 & 세하 두 필라르", "lat": 41.1378, "lng": -8.6092, "desc": "17:30 황금빛 일몰 & 야경", "details": "동루이스 다리 상층 보행 ➔ 모루 정원 & 세하 두 필라르 일몰 감상 [선택: 17:00 유람선]"}, {"num": 10, "name": "🍽️ Casa D'Minha Avó", "lat": 41.1362, "lng": -8.6083, "desc": "19:15 4.9★ 정통 가정식 만찬", "details": "모루 정원 도보 3분 4.9★ 정통 가정식 만찬 (화요일 정상 영업!)"}], "2_6": [{"num": 1, "name": "☕ 아침 조식 (Soul & Sip)", "lat": 41.1452, "lng": -8.6105, "desc": "08:30 스페셜티 커피", "details": "숙소 도보 2분 스페셜티 드립 커피 & 브런치 4.9★"}, {"num": 2, "name": "🏛️ 포르투 대성당 테라스", "lat": 41.1428, "lng": -8.6111, "desc": "09:30 구시가지 지붕 파노라마", "details": "아침 햇살 아래 구시가지 지붕 파노라마 20분 쾌속 조망"}, {"num": 3, "name": "🥧 Castro 에그타르트", "lat": 41.1436, "lng": -8.612, "desc": "10:00 4.8★ 명품 타르트 티타임", "details": "유리창 너머 갓 구워내는 따뜻하고 바삭한 타르트 & 커피 4.8★"}, {"num": 4, "name": "🏛️ 볼사 궁전 & 인판테 광장", "lat": 41.1415, "lng": -8.6155, "desc": "10:45 신고전주의 궁전 & 강변 산책", "details": "Castro에서 완만한 내리막 4분, 볼사 궁전 & 성 프란시스코 성당 외관 및 인판테 광장 벤치 쉼"}, {"num": 5, "name": "🍽️ Meia-Nau Porto", "lat": 41.1408, "lng": -8.6152, "desc": "11:45 4.9★ 문어구이 점심", "details": "부드러운 숯불 문어구이 & 신선한 해산물 점심 4.9★"}, {"num": 6, "name": "🏨 숙소 (낮잠 전면 휴식)", "lat": 41.14532, "lng": -8.61122, "desc": "13:00 2.5시간 침대 낮잠", "details": "짐 정리 부담 없이 온전히 에어컨 침대 낮잠 전면 휴식", "isHotel": true}, {"num": 7, "name": "🚋 1번 빈티지 트램 탑승", "lat": 41.1405, "lng": -8.6155, "desc": "15:30 낭만 트램 20분 이동", "details": "15:30 숙소 출발 ➔ Infante에서 1번 목조 트램(대기 포함 60분 버퍼) 탑승"}, {"num": 8, "name": "🏛️ 파세이우 알레그레 & Tavi", "lat": 41.1485, "lng": -8.6705, "desc": "16:30 야자수 공원 & 오션뷰 카페", "details": "야자수 정원 산책 또는 Tavi 1935 오션뷰 테라스 티타임"}, {"num": 9, "name": "🗼 펠게이라스 등대 일몰", "lat": 41.1465, "lng": -8.6815, "desc": "18:15 대서양 수평선 일몰", "details": "대서양 수평선으로 붉게 떨어지는 장엄한 바다 일몰 & 파도 포토타임"}, {"num": 10, "name": "🍽️ Tapabento S.Bento", "lat": 41.14549, "lng": -8.60954, "desc": "20:00 포르투 1위 미식 만찬", "details": "수요일 19:00~22:00 정상 영업 소꼬리찜 & 해산물 만찬 (파두 선택 가능)"}], "2_7": [{"num": 1, "name": "☕ 조식 (Soul & Sip 4.9★)", "lat": 41.1452, "lng": -8.6105, "desc": "08:15 브런치 & 커피"}, {"num": 2, "name": "🏨 포르투 숙소 (09:35 퇴실)", "lat": 41.14532, "lng": -8.61122, "desc": "09:35 최종 짐점검 & 퇴실 ➔ 우버 탑승", "isHotel": true}, {"num": 3, "name": "🛫 포르투 공항 OPO (10:00 도착)", "lat": 41.2356, "lng": -8.6814, "desc": "10:00 도착 (출발 2시간 전) ➔ 12:00 라이언에어 이륙"}], "3_7": [{"num": 1, "name": "✈️ BCN 공항 T2 도착", "lat": 41.3033, "lng": 2.0743, "desc": "14:45 착륙 ➔ 수하물 수취"}, {"num": 2, "name": "🚌 Sarfa 직행 버스 승차", "lat": 41.3035, "lng": 2.0745, "desc": "16:00 출발 ➔ 토사델마르 직행"}, {"num": 3, "name": "🏨 호텔 델핀 (Hotel Delfín)", "lat": 41.7214, "lng": 2.9315, "desc": "17:40 체크인 & 1시간 침대 휴식", "isHotel": true}, {"num": 4, "name": "🏖️ 플랏자 그란 해변 & 고성", "lat": 41.7188, "lng": 2.9328, "desc": "18:45 해변 산책 & 빌라 벨라 노을"}, {"num": 5, "name": "🍽️ Restaurant Tursia (4.8★)", "lat": 41.7208, "lng": 2.9318, "desc": "19:30 지중해 해산물 빠에야 만찬"}], "3_8": [{"num": 1, "name": "🏨 호텔 델핀 조식", "lat": 41.7214, "lng": 2.9315, "desc": "08:30 지중해식 조식 뷔페", "isHotel": true}, {"num": 2, "name": "🏰 성벽 입구 (Muralles)", "lat": 41.71713, "lng": 2.93302, "desc": "09:30 중세 성벽길 진입"}, {"num": 3, "name": "🗼 토사 등대 & Bar del Far", "lat": 41.71579, "lng": 2.93377, "desc": "10:30 절벽 테라스 카페 쉼"}, {"num": 4, "name": "🏛️ 에스 코돌라르 해변", "lat": 41.71593, "lng": 2.93252, "desc": "11:30 하산 [선택: 파시엔시아 4.9★]"}, {"num": 5, "name": "🍽️ Pou de la Vila (4.7★)", "lat": 41.71938, "lng": 2.93197, "desc": "12:00 카탈루냐 가정식 점심"}, {"num": 6, "name": "🏖️ 플랏자 그란 해수욕", "lat": 41.72056, "lng": 2.93389, "desc": "13:30 2시간 해수욕 & 선베드 쉼"}, {"num": 7, "name": "🏛️ 구시가지 쇼핑 & 노을", "lat": 41.72, "lng": 2.931, "desc": "17:45 에스파드류 쇼핑 & 젤라토"}, {"num": 8, "name": "🍽️ Restaurant Tursia (4.8★)", "lat": 41.72157, "lng": 2.93361, "desc": "19:15 해산물 모둠 구이 만찬"}], "3_9": [{"num": 1, "name": "🏨 호텔 델핀 조식", "lat": 41.7214, "lng": 2.9315, "desc": "08:30 조식 뷔페", "isHotel": true}, {"num": 2, "name": "🚏 토사 버스 터미널", "lat": 41.7215, "lng": 2.9282, "desc": "10:15 사르파 버스 탑승"}, {"num": 3, "name": "🚏 바르셀로나 북부터미널", "lat": 41.39469, "lng": 2.18337, "desc": "11:45 도착 ➔ L1 지하철 이동"}, {"num": 4, "name": "🏛️ Arc de Triomf역 (L1)", "lat": 41.392, "lng": 2.181, "desc": "L1 직행 탑승 (8분 주파)"}, {"num": 5, "name": "🏨 Occidental 1929 (짐보관)", "lat": 41.37537, "lng": 2.14763, "desc": "12:10 도착 & 짐 보관", "isHotel": true}], "4_9": [{"num": 1, "name": "🏛️ 아레나스 쇼핑몰", "lat": 41.3762, "lng": 2.1492, "desc": "11:50 쇼핑 & 전망대", "details": "패션/잡화 매장 둘러보기 & 5층 루프탑 무료 원형 전망대 감상"}, {"num": 2, "name": "🍽️ KimchiMama", "lat": 41.37594, "lng": 2.14344, "desc": "13:30 한식 오픈런 점심", "details": "든든하고 칼칼한 김치찌개 & 불고기 만찬 (4.8★)"}, {"num": 3, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "14:30 정시 체크인 & 환복", "details": "Occidental Barcelona 1929 객실 입실 및 정돈", "isHotel": true}, {"num": 4, "name": "☕ Salts 테라스 바", "lat": 41.36941, "lng": 2.16423, "desc": "15:15 올림픽 풀 뷰 티타임", "details": "택시 등반 ➔ 올림픽 다이빙 풀 & 바르셀로나 시내 스카이라인 조망"}, {"num": 5, "name": "📸 알칼데 전망대", "lat": 41.3687, "lng": 2.1683, "desc": "16:00 바다·항구 파노라마 뷰", "details": "지중해 바다와 크루즈 항구가 한눈에 내려다보이는 최고의 오션뷰 스팟 (4.6★)"}, {"num": 6, "name": "🌳 호안 브로사 정원", "lat": 41.3684, "lng": 2.1638, "desc": "16:45 돗자리 쉼 & 잔디밭", "details": "울창한 지중해 소나무 숲과 넓은 잔디 광장, 돗자리 펴고 편안히 힐링하기 최적"}, {"num": 7, "name": "🏛️ 그리스 극장 & 라리발 정원", "lat": 41.3698, "lng": 2.1585, "desc": "17:45 신전풍 극장 & 분수 회랑", "details": "그리스 신전풍 야외극장 무대 ➔ 라리발 아랍식 분수 회랑(Font del Gat) 산책"}, {"num": 8, "name": "🌅 MNAC 궁전 계단 테라스", "lat": 41.36877, "lng": 2.15336, "desc": "19:00~19:50 일몰 & 매직아워", "details": "19:00 정각 도착 착석 ➔ 버스커 라이브 & 19:22 정시 일몰 & 19:50 매직아워 야경 직관"}, {"num": 9, "name": "🍽️ IL Golfo Di Napoli / TAPS Bar", "lat": 41.37229, "lng": 2.15529, "desc": "20:00 나폴리 화덕피자 / 타파스", "details": "20:00 정시 오픈런 나폴리 화덕피자 또는 감성 타파스 만찬"}, {"num": 10, "name": "⛲ 몬주익 마법의 분수", "lat": 41.37116, "lng": 2.15174, "desc": "21:00 매직 분수 쇼 직관", "details": "음악과 오색 조명의 화려한 분수 쇼 직관 (뒤편 4개의 기둥 입체 뷰 연계)"}], "4_10": [
+  {"num": 1, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "08:30 출발 & 숙소", "details": "Occidental Barcelona 1929 숙소", "isHotel": true},
+  {"num": 2, "name": "🍽️ La Terraza Miró", "lat": 41.3768, "lng": 2.1465, "desc": "08:30 테라스 조식", "details": "숙소 도보 3분! 야외 테라스에서 즐기는 여유로운 아침 조식 (4.7★)"},
+  {"num": 3, "name": "🏛️ 카탈루냐 국립미술관 (MNAC)", "lat": 41.36877, "lng": 2.15336, "desc": "10:00~13:00 3시간 무료 관람", "details": "매월 첫째 일요일 전면 무료 개방! 로마네스크 벽화 & 돔 오발 홀 3시간 풀 관람"},
+  {"num": 4, "name": "🌳 호안 마라갈 정원", "lat": 41.3667, "lng": 2.1517, "desc": "13:00~13:40 왕실 분수정원", "details": "주말 10:00~15:00 한정 개방 명소! 스페인 국왕 영빈관 알베니스 궁전 정원 산책"},
+  {"num": 5, "name": "🍽️ Mar i Terra Arenas", "lat": 41.3762, "lng": 2.1492, "desc": "13:45 몬주익 뷰 점심", "details": "아레나스 쇼핑몰 5층 루프탑! 몬주익 궁전을 내려다보며 즐기는 해산물 빠에야 (4.8★)"},
+  {"num": 6, "name": "🏰 구엘 저택 (Palau Güell)", "lat": 41.3792, "lng": 2.1742, "desc": "16:30 예약 관람", "details": "가우디의 초기 유네스코 세계유산 대저택! 중앙 돔 홀 & 옥상 예술 굴뚝 (16:30~17:45)"},
+  {"num": 7, "name": "☕ 레이알 광장 (테라스 쉼)", "lat": 41.3795, "lng": 2.176, "desc": "18:00~19:00 광장 테라스 쉼", "details": "구엘 저택 도보 3분! 레이알 광장 테라스 카페(Ocaña / Glaciar)에서 차 한잔과 디저트를 즐기며 다리 휴식"},
+  {"num": 8, "name": "🏛️ 고딕 & 보른 야경 투어", "lat": 41.38, "lng": 2.1755, "desc": "19:00~20:30 야경 투어", "details": "레이알 광장 미팅(19:00) ➔ 츄레리아 ➔ 산펠립네리 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르(20:30 종료)"},
+  {"num": 9, "name": "🍽️ Arcano Restaurant cave", "lat": 41.3857, "lng": 2.1793, "desc": "21:00 예약 디너 만찬", "details": "투어 종료 지점 도보 5분! 17세기 돌벽 동굴(Cave)에서 즐기는 숯불 안구스 스테이크 만찬 (21:00 사전 예약 필수)"},
+  {"num": 10, "name": "🏨 숙소(Occidental 1929) 복귀", "lat": 41.37537, "lng": 2.14763, "desc": "22:30 택시 복귀", "details": "식당 앞 대로변(Via Laietana)에서 택시 탑승 ➔ 호텔(Occidental 1929) 10분 만에 편안하게 복귀", "isHotel": true}
+],   
+"4_11": [{"num": 1, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "09:30 체크아웃", "details": "Occidental Barcelona 1929 숙소 체크아웃 출발", "isHotel": true}, {"num": 2, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "09:45 짐 사전 보관", "details": "그라나다 복귀 후 투숙할 5성급 호텔 컨시어지에 대형 캐리어 사전 보관", "isHotel": true}, {"num": 3, "name": "🏰 구엘 공원 후문", "lat": 41.4172, "lng": 2.1528, "desc": "10:00~12:00 2시간 관람", "details": "고지대 후문 입장 ➔ 물결 벤치 광장 & 파도 회랑 & 도마뱀 분수대 (내리막 관람)"}, {"num": 4, "name": "🏛️ 까사 밀라 (La Pedrera)", "lat": 41.3952, "lng": 2.1619, "desc": "12:30 파사드 감상", "details": "24번 버스 직통 12:30 도착! 파도치는 석회암 파사드 감상 및 포토타임"}, {"num": 5, "name": "🏛️ 까사 바트요 (Casa Batlló)", "lat": 41.3917, "lng": 2.1649, "desc": "13:15 파사드 감상", "details": "그라시아 대로 내리막 도보 8분(500m)! 알록달록 바다 모자이크와 뼈의 집 외관 감상"}, {"num": 6, "name": "🍽️ Vinitus / Ciudad Condal", "lat": 41.3899, "lng": 2.1609, "desc": "14:00 타파스 점심", "details": "까사 바트요 도보 3분! 꿀대구 & 수제 감바스 알 아히요 만찬"}, {"num": 7, "name": "🏛️ 바르셀로나 개선문", "lat": 41.391, "lng": 2.1806, "desc": "15:00 광장 포토존", "details": "식당에서 택시 6분 이동! 1888 만국박람회 붉은 벽돌 개선문 포토타임"}, {"num": 8, "name": "🌳 시우타델라 공원", "lat": 41.3882, "lng": 2.1874, "desc": "15:30 호수 벤치 쉼", "details": "대분수(Cascada) & 호수 주변 그늘 벤치 힐링 (100% 평지)"}, {"num": 9, "name": "☕ 카탈루냐 광장 & Almanac", "lat": 41.387, "lng": 2.17, "desc": "16:30 티타임 휴식", "details": "호텔 라운지/카페에서 비행 전 다리 푹 쉬며 티타임 & 1박용 짐 점검", "isHotel": true}, {"num": 10, "name": "🚌 카탈루냐 광장 Aerobus", "lat": 41.3875, "lng": 2.1695, "desc": "18:30 공항버스 탑승", "details": "카탈루냐 광장 ➔ BCN T1 직행 Aerobus A1 탑승"}, {"num": 11, "name": "✈️ 바르셀로나 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "19:15 도착 & 21:15 비행", "details": "부엘링 VY2018 항공편으로 그라나다 이동"}], "5_11": [{"num": 1, "name": "🛬 그라나다 공항 (GRX)", "lat": 37.1887, "lng": -3.77736, "desc": "22:45 착륙 & 짐 찾기", "details": "부엘링 VY2018 바르셀로나 출발편 착륙 ➔ 수하물 수거 후 청사 앞 공식 택시 승강장 이동"}, {"num": 2, "name": "🚕 공항 택시 승강장", "lat": 37.1882, "lng": -3.778, "desc": "23:15 공항 택시 탑승", "details": "공식 택시 탑승 ➔ 고속도로 경유 시내 중심 숙소 직통 이동 (약 25~30분, 정찰 야간 요금 약 €25~30)"}, {"num": 3, "name": "🏨 Hotel Puerta de las Granadas", "lat": 37.17623, "lng": -3.5952, "desc": "23:45 체크인 & 취침", "details": "알함브라 숲길 진입로 입구(Cuesta de Gomérez 16) 위치 부티크 호텔 체크인 & 취침", "isHotel": true}], "5_12": [{"num": 1, "name": "🍽️ Cafetería d'Sano", "lat": 37.17845, "lng": -3.60265, "desc": "07:30 조식 & 체크아웃", "details": "그라나다 1위 조식 명소 (4.8★) / 하몽 토스트 & 착즙 오렌지 주스 / ★08:15 출발 전 1박용 짐을 메고 체크아웃 완료 (호텔 복귀 불필요!)"}, {"num": 2, "name": "🚶 Cuesta de Gomérez 숲길", "lat": 37.1755, "lng": -3.5935, "desc": "08:15 숲길 도보 산책", "details": "숙소 바로 앞 완만한 숲길 산책로 도보 10~12분(700m) 또는 플라사 누에바 C30 미니버스(5분)"}, {"num": 3, "name": "🏛️ 알함브라 투어 미팅 장소", "lat": 37.17368, "lng": -3.58382, "desc": "08:30 정시 미팅", "details": "Pabellón de Acceso (티켓 오피스 앞) 가이드 미팅 & 여권 원본 확인"}, {"num": 4, "name": "🏛️ 나스르 궁전", "lat": 37.17741, "lng": -3.58968, "desc": "09:00 정시 지정 입장", "details": "★09:00 정시 지정 입장 (지각 시 입장 불가)! 사자의 중정, 아라야네스 중정 등 이슬람 예술의 절정"}, {"num": 5, "name": "🏛️ 카를로스 5세 궁전", "lat": 37.17682, "lng": -3.58995, "desc": "10:30 원형 열주 중정", "details": "르네상스 양식의 거대한 2층 원형 열주 중정"}, {"num": 6, "name": "🏰 알카사바 요새", "lat": 37.17704, "lng": -3.5916, "desc": "11:15 벨라의 탑 조망", "details": "알함브라 최고령 군사 요새 / 벨라의 탑에서 시에라네바다 설산 & 시내 조망"}, {"num": 7, "name": "🌸 헤네랄리페", "lat": 37.178, "lng": -3.58548, "desc": "11:50 분수 정원 & 별궁", "details": "술탄의 여름 별장 & 아세키아 수로 분수 정원 산책"}, {"num": 8, "name": "🍽️ La Auténtica Carmela", "lat": 37.17637, "lng": -3.59695, "desc": "12:30 타파스 점심", "details": "숲길 도보 10분 하산 ➔ 플라사 누에바 정통 안달루시아 타파스 명가 점심 식사"}, {"num": 9, "name": "🏛️ 산 니콜라스 전망대", "lat": 37.18111, "lng": -3.59266, "desc": "14:00 설산 & 알함브라 뷰", "details": "C31·C32 미니버스(€1.40) 탑승 ➔ 알함브라 전경과 만년설 조망 최고 포토존"}, {"num": 10, "name": "☕ 플라사 누에바 노천 카페", "lat": 37.17685, "lng": -3.59604, "desc": "15:30 카페 휴식 & 티타임", "details": "미니버스 하산 ➔ 플라사 누에바 테라스 카페에서 시원한 음료/차 마시며 휴식 (짐 수거 복귀 불필요!)"}, {"num": 11, "name": "🚕 플라사 누에바 택시 승강장", "lat": 37.1767, "lng": -3.5959, "desc": "16:00 공항 택시 탑승", "details": "광장 앞 공식 택시 승강장에서 공항 택시 탑승 (소요 시간 25~30분, 약 €25~30)"}, {"num": 12, "name": "🛫 그라나다 공항 도착", "lat": 37.1887, "lng": -3.77736, "desc": "16:30 공항 수속 & 대기", "details": "출발 1시간 25분 전 공항 도착 ➔ 여유로운 보안검색 및 게이트 대기"}, {"num": 13, "name": "✈️ 부엘링 VY2017 탑승", "lat": 37.189, "lng": -3.7785, "desc": "17:55 이륙 ➔ 바르셀로나", "details": "그라나다(GRX) ➔ 바르셀로나(BCN T1) 이동"}], "6_12": [{"num": 1, "name": "🛬 BCN 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "19:25 착륙 & 입국", "details": "그라나다발 부엘링 VY2017 착륙 ➔ 위탁수하물 대기 없이 신속히 출국장 택시 승강장 이동"}, {"num": 2, "name": "🚕 택시 승강장", "lat": 41.2885, "lng": 2.074, "desc": "20:00 택시 탑승", "details": "공항 공식 택시 탑승 ➔ 호텔 정문 직행 (약 20~25분 소요, 약 €30~35)"}, {"num": 3, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "20:35 체크인 & 짐수령", "details": "Gran Via 619-621 최고급 5성급 숙소 입실 ➔ 미리 맡겨둔 대형 캐리어 수령 & 갤러리룸 입실", "isHotel": true}, {"num": 4, "name": "🍽️ Batea / El Nacional", "lat": 41.3908, "lng": 2.1682, "desc": "21:00 호텔 주변 저녁", "details": "호텔 도보 1~3분 Batea(4.7★ 해산물 다이닝) 또는 El Nacional(4.4★ 웅장한 아르누보 푸드홀) 만찬"}], "6_13": [{"num": 1, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "08:30 5성급 조식 & 출발", "details": "Almanac Barcelona 5성급 호텔 조식 뷔페 (★예약에 조식 포함!) ➔ 10:00 쇼핑 출발", "isHotel": true}, {"num": 2, "name": "🏛️ 그라시아 쇼핑 거리", "lat": 41.3895, "lng": 2.1648, "desc": "10:00 로에베 & 명품 쇼핑", "details": "로에베 플래그십(카사 례오 모레라), 마시모 두띠, 산타 에울랄리아 명품 의류/가죽 쇼핑 (완전 평지)"}, {"num": 3, "name": "🛬 엘 코르테 잉글레스", "lat": 41.3872, "lng": 2.1698, "desc": "11:30 고메 식품관 선물", "details": "지하 Club del Gourmet: 최고급 5J 하몽 이베리코 진공팩, 오로 바일렌 올리브유, 수제 투론 쇼핑 ➔ 호텔 객실 짐 보관"}, {"num": 4, "name": "⭐ Caelis (미슐랭 1스타)", "lat": 41.3868, "lng": 2.1738, "desc": "12:30 미슐랭 런치 코스", "details": "Hotel Ohla 1층 (호텔 도보 8분). 수요일 정시 오픈런! 전설의 런치 코스(Menú Caelis 1인 €65) 또는 테이스팅 코스"}, {"num": 5, "name": "🏨 숙소 (낮잠 휴식)", "lat": 41.3905, "lng": 2.1678, "desc": "14:30 침대 낮잠 완충", "details": "객실 복귀 ➔ 샤워 및 1시간 30분 침대 낮잠으로 오후 사그라다 파밀리아 관람 체력 100% 충전", "isHotel": true}, {"num": 6, "name": "🏛️ 사그라다 파밀리아", "lat": 41.4036, "lng": 2.1744, "desc": "16:30 공식 투어 (확정)", "details": "★16:30 정시 지정 입장 (Marina 입구). 서쪽 스테인드글라스 황금빛 석양 빛내림 & 공식 오디오가이드"}, {"num": 7, "name": "📸 가우디 광장 연못", "lat": 41.4042, "lng": 2.1755, "desc": "19:00 성당 반영 야경", "details": "성당 앞 연못에 비치는 성당 반영(Reflection) 야경 감상 & 인생 기념사진 촬영"}, {"num": 8, "name": "🍽️ Quesarium / Vinitus", "lat": 41.3948, "lng": 2.1632, "desc": "19:30 저녁 식사", "details": "그라시아 복귀 ➔ Quesarium(4.8★ 치즈/와인 타파스) 또는 Vinitus(꿀대구 타파스) 만찬"}, {"num": 9, "name": "📸 Azimuth 루프탑 바", "lat": 41.3905, "lng": 2.1678, "desc": "21:00 루프탑 야경 & 쉼", "details": "Almanac 호텔 8층 루프탑에서 사그라다 파밀리아 실루엣과 바르셀로나 도심 야경 감상 & 숙면", "isHotel": true}], "6_14": [{"num": 1, "name": "🏨 Almanac Barcelona", "lat": 41.3905, "lng": 2.1678, "desc": "08:30 조식 & 12:00 체크아웃", "details": "Almanac Barcelona 5성급 호텔 조식 뷔페 (★예약 포함) ➔ 11:30 객실 패킹 & 12:00 정시 체크아웃", "isHotel": true}, {"num": 2, "name": "🏛️ 카사 바트요", "lat": 41.3917, "lng": 2.1649, "desc": "10:00 가우디 파사드 감상", "details": "그라시아 대로 도보 3분! 아침 햇살을 받는 카사 바트요 외관 감상 및 기념사진"}, {"num": 3, "name": "🏛️ 카사 밀라 (라 페드레라)", "lat": 41.3952, "lng": 2.1619, "desc": "10:30 파도치는 파사드", "details": "그라시아 대로 평지 산책 ➔ 카사 밀라 외관 감상 & 테라스 카페 커피 쉼"}, {"num": 4, "name": "🛬 엘 코르테 잉글레스", "lat": 41.3872, "lng": 2.1698, "desc": "11:00 고메관 선물 쇼핑", "details": "지하 Club del Gourmet: 5J 하몽, 오로 바일렌 올리브유, 수제 투론 마지막 쇼핑"}, {"num": 5, "name": "🍽️ Batea / El Nacional", "lat": 41.3908, "lng": 2.1682, "desc": "12:00 고별 점심 식사", "details": "호텔 도보 1~3분 Batea(4.7★ 해산물) 또는 El Nacional(4.4★ 푸드홀)에서 마지막 오찬"}, {"num": 6, "name": "🛫 BCN 공항 T1", "lat": 41.288, "lng": 2.0733, "desc": "14:00 도착 ➔ 17:00 출국", "details": "택시 25분 직행 ➔ DIVA 텍스리펀 승인 & 카타르항공 QR 146 출국 수속"}]};   
 const itineraryData = [
   {
     "region": 1,
@@ -1527,15 +1652,15 @@ const itineraryData = [
     "items": [
       {
         "id": "1-1",
-        "time": "01:20 - 13:35",
+        "time": "01:20 - 13:40",
         "type": "flight",
         "typeText": "✈️ 항공",
         "title": "✈️ [카타르항공 QR 859/341] 인천 ➔ 리스본 (도하 환승)",
-        "preview": "도하 공항 2시간 대기 후 리스본 도착 (QR 859 / QR 341)",
+        "preview": "도하 공항 1시간 55분 대기 후 리스본 도착 (05:20 도착 ➔ 07:15 출발) (QR 859 / QR 341)",
         "details": {
           "flightInfo": "카타르항공 QR 859 (인천➔도하) & QR 341 (도하➔리스본)",
-          "schedule": "인천 출발 01:20 ➔ 도하 도착 05:20 / 도하 출발 07:30 ➔ 리스본 도착 13:35",
-          "notes": "E-ticket: 157-2133975773 (민재 김, 미행 김). 도하 공항 2시간 환승 수하물 자동 연계.",
+          "schedule": "인천 출발 01:20 ➔ 도하 도착 05:20 / 도하 출발 07:15 ➔ 리스본 도착 13:40",
+          "notes": "E-ticket: 157-2133975773 (민재 김, 미행 김). 도하 공항 1시간 55분 환승 (05:20 도착 ➔ 07:15 출발), 수하물 자동 연계.",
           "ticketLink": "https://www.qatarairways.com",
           "hasMultiFiles": true,
           "fileButtons": [
@@ -1562,24 +1687,25 @@ const itineraryData = [
       },
       {
         "id": "1-2",
-        "time": "13:35 - 14:20",
+        "time": "13:40 - 14:25",
         "type": "flight",
         "typeText": "🛬 공항 수속 & 🌳 카드 수령",
-        "title": "🛬 공항 입국 수속 & 🌳 리스보아 카드 실물 즉시 수령",
-        "preview": "짐 찾기 ➔ T1 입국장 로비 Ask Me Lisboa 카운터에서 실물 카드 교환 (07:00~22:00)",
+        "title": "🛬 공항 입국 수속 & 🌳 리스보아 카드 실물 즉시 수령 (예매권 첨부)",
+        "preview": "짐 찾기 ➔ T1 입국장 Ask Me Lisboa에서 실물 카드 교환 | 📄 e-티켓 바우처 첨부",
         "details": {
           "spotName": "리스본 포르텔라 공항 (LIS) T1 입국장 Ask Me Lisboa",
-          "description": "13:35 착륙 후 입국 심사 및 수하물 수취 후, 입국장(Arrivals Hall) 로비에 위치한 'Ask Me Lisboa' 공식 인포메이션 부스에서 온라인 예매 바우처(QR코드)를 제시하고 24시간권 실물 카드를 즉시 수령합니다.",
+          "description": "13:40 착륙 후 입국 심사 및 수하물 수취 후, 입국장(Arrivals Hall) 로비에 위치한 'Ask Me Lisboa' 공식 인포메이션 부스에서 온라인 예매 바우처(QR코드)를 제시하고 24시간권 실물 카드를 즉시 수령합니다.",
           "whyRecommended": "★공항에서 실물 카드를 미리 받아두더라도 첫 사용(3일차 트램 태그) 순간부터 24시간이 카운트되므로 안심하고 수령하시면 됩니다. 실물 카드 뒷면의 카드 번호가 있어야 3일차 제로니무스 수도원 등 사전 온라인 예약이 가능합니다!",
-          "notes": "★<b>리스보아 카드 예매 완료 (₩85,500)</b>: 마이리얼트립 2인 24시간권 예매 완료 (Ref ID: 485308444). 공항 입국장 Ask Me Lisboa 부스에서 아래 바우처 QR을 제시하고 실물 카드를 즉시 수령하시면 됩니다.",
-          "ticketTitle": "📄 [리스보아 카드 공식 e-티켓 바우처 보기]",
+          "notes": "★<b>리스보아 카드 24시간권 2인 예매 완료 (₩85,500)</b><br>• 예약자: MINJAE KIM (mj10102@naver.com)<br>• 예약 번호(Ref ID): <b>485308444</b> / 바코드: <b>485308444433</b><br>• 수령 장소: 리스본 공항 T1 입국장 'Ask Me Lisboa' 부스 (운영시간 07:00 ~ 21:30)<br>• 수령 방법: 모바일 바우처(PDF) 화면의 바코드를 제시하여 실물 카드로 즉시 교환<br>• 유효기간 안내: 실물 카드 첫 사용(3일차 15E 트램 태그 또는 제로니무스 수도원) 시점부터 24시간 유효",
+          "hasTicketFile": true,
+          "ticketTitle": "📄 [리스보아 카드 24시간권 공식 e-티켓 바우처 보기 (PDF)]",
           "fileObj": userFiles.ticketLisboaCard,
           "mapUrl": "https://www.google.com/maps/search/?api=1&query=Lisbon+Airport+Terminal+1&query_place_id=ChIJ_cUcGEQyGQ0R8PO-eGDMyO0"
         }
       },
       {
         "id": "1-3",
-        "time": "14:20 - 14:50",
+        "time": "14:25 - 14:55",
         "type": "transport",
         "typeText": "🚕 우버/볼트 (약 20분)",
         "title": "🚕 [우버/볼트 약 20분] 리스본 공항 ➔ R. do Regedor 숙소 이동",
@@ -3834,11 +3960,11 @@ const itineraryData = [
     "region": 4,
     "day": 10,
     "date": "10/04 (일)",
-    "dayTitle": "10일차: MNAC·구엘 저택 & 레이알 광장 저녁·고딕·보른 야경 투어",
+    "dayTitle": "10일차: MNAC·구엘 저택 & 고딕 야경 투어·Arcano 동굴 레스토랑 만찬",
     "isFinalized": true,
     "fullRoute": {
-      "summary": "① 🏨 Occidental 1929 ➔ ② 🍽️ La Terraza Miró(조식) ➔ ③ 🏛️ 카탈루냐 미술관 MNAC(무료 관람) ➔ ④ 🌳 호안 마라갈 정원(왕실 정원) ➔ ⑤ 🍽️ Mar i Terra(루프탑 점심) ➔ ① 🏨 숙소(침대 휴식) ➔ ⑥ 🏰 구엘 저택(가우디 대저택) ➔ ⑦ 🍽️ 레이알 광장(이른 저녁 식사) ➔ ⑧ 🏛️ 고딕·보른 야경 투어(레이알광장 ➔ 츄레리아 ➔ 대성당 ➔ 산타마리아 델 마르) ➔ ① 🏨 숙소 복귀",
-      "mapUrl": "https://www.google.com/maps/dir/Hotel+Occidental+Barcelona+1929,+Carrer+Creu+Coberta,+Barcelona/Museu+Nacional+d%27Art+de+Catalunya,+Palau+Nacional,+Barcelona/Jardins+de+Joan+Maragall,+Barcelona/Arenas+de+Barcelona,+Gran+Via+de+les+Corts+Catalanes,+Barcelona/Palau+G%C3%BCell,+Carrer+Nou+de+la+Rambla,+Barcelona/Placa+Reial,+Barcelona/Basilica+de+Santa+Maria+del+Mar,+Barcelona/Hotel+Occidental+Barcelona+1929,+Carrer+Creu+Coberta,+Barcelona",
+      "summary": "① 🏨 Occidental 1929 ➔ ② 🍽️ La Terraza Miró(조식) ➔ ③ 🏛️ 카탈루냐 미술관 MNAC(무료 관람) ➔ ④ 🌳 호안 마라갈 정원(왕실 정원) ➔ ⑤ 🍽️ Mar i Terra(루프탑 점심) ➔ ① 🏨 숙소(침대 휴식) ➔ ⑥ 🏰 구엘 저택(16:30 예약) ➔ ⑦ ☕ 레이알 광장(18:00 테라스 티타임 & 쉼) ➔ ⑧ 🏛️ 고딕·보른 야경 투어(19:00~20:30) ➔ ⑨ 🍽️ Arcano Restaurant cave(21:00 예약 만찬) ➔ ① 🏨 숙소 택시 복귀",
+      "mapUrl": "https://www.google.com/maps/dir/Hotel+Occidental+Barcelona+1929,+Carrer+Creu+Coberta,+Barcelona/Museu+Nacional+d%27Art+de+Catalunya,+Palau+Nacional,+Barcelona/Jardins+de+Joan+Maragall,+Barcelona/Arenas+de+Barcelona,+Gran+Via+de+les+Corts+Catalanes,+Barcelona/Palau+G%C3%BCell,+Carrer+Nou+de+la+Rambla,+Barcelona/Placa+Reial,+Barcelona/Basilica+de+Santa+Maria+del+Mar,+Barcelona/Arcano+Restaurant,+Carrer+dels+Mercaders,+Barcelona/Hotel+Occidental+Barcelona+1929,+Carrer+Creu+Coberta,+Barcelona",
       "myMapUrl": "https://www.google.com/maps/d/viewer?mid=1osd79-krs1wzAbJ5pWou7iHeIJSOxWk",
       "myMapEmbedUrl": "https://www.google.com/maps/d/embed?mid=1osd79-krs1wzAbJ5pWou7iHeIJSOxWk"
     },
@@ -3889,6 +4015,7 @@ const itineraryData = [
           "description": "호텔 앞에서 에스컬레이터를 타고 몬주익 언덕 위 카탈루냐 궁전으로 이동합니다. <b>★매월 첫 번째 일요일 전면 무료입장</b> 혜택을 누려 오전 10:00 개장과 동시에 정시 입장합니다. 1929 만국박람회 기념 오발 홀(Sala Oval)의 웅장한 돔 천장부터, 피레네 산맥의 중세 교회들에서 그대로 옮겨와 복원한 유네스코급 세계 최대 로마네스크 성화·벽화 컬렉션, 고딕과 르네상스 걸작 갤러리까지 3시간 동안 시간에 쫓기지 않고 풍성하게 관람합니다.",
           "whyRecommended": "일요일은 10:00부터 15:00까지만 단축 운영하므로, 개장 직후 첫 타임에 입장해야 인파 없이 가장 여유롭고 깊이 있게 3시간 관람이 가능합니다.",
           "notes": "★<b>카탈루냐 국립미술관 공식 무료입장권 발권 완료</b>: 10/04(일) 10:00 정시 입장 2인 무료 티켓 확정 (예약번호: 486337 / KIM MINJAE). 스마트폰으로 아래 티켓 화면을 제시하고 바로 입장합니다.<br><br>★<b>미술관 이동 편의 안내</b>: 숙소(Occidental 1929)에서 MNAC 궁전 정문까지는 에스파냐 광장 뒤편 분수대를 따라 <b>야외 에스컬레이터 4개 구간</b>이 설치되어 계단을 오르지 않고 편안하게 올라갈 수 있습니다. 혹시라도 걷지 않고 가시려면 에스파냐 광장 앞 정류장에서 150번 또는 55번 버스(3정거장 4분) 또는 택시(3분, 약 €5~6)를 타시면 궁전 현관 앞까지 직행합니다.",
+          "hasTicketFile": true,
           "ticketTitle": "📄 [카탈루냐 미술관 공식 입장권 보기]",
           "fileObj": userFiles.ticketMnac,
           "mapUrl": "https://www.google.com/maps/search/?api=1&query=Museu+Nacional+d%27Art+de+Catalunya&query_place_id=ChIJX2mQb5qjpBIR7hASD07l79o"
@@ -3957,10 +4084,10 @@ const itineraryData = [
       },
       {
         "id": "b10-7",
-        "time": "16:30 - 18:00",
+        "time": "16:30 - 17:45",
         "type": "tour",
         "typeText": "🏰 가우디 예약관람",
-        "title": "🏰 ★[구엘 저택 (Palau Güell)] 16:30 예약 관람 (1.5시간)",
+        "title": "🏰 ★[구엘 저택 (Palau Güell)] 16:30 예약 관람 (1시간 15분)",
         "preview": "가우디의 초기 유네스코 대저택 ➔ 중앙 돔 파이프오르간 홀 & 옥상 화려한 예술 굴뚝 관람",
         "details": {
           "spotName": "구엘 저택 (Palau Güell, 유네스코 세계문화유산, 구글 4.6★)",
@@ -3971,67 +4098,99 @@ const itineraryData = [
       },
       {
         "id": "b10-8",
-        "time": "18:00 - 19:45",
+        "time": "18:00 - 19:00",
         "type": "meal",
-        "typeText": "🍽️ 이른 저녁 식사",
-        "title": "🍽️ 저녁 식사: 레이알 광장 야외 테라스 / 타파스 명가 (이른 저녁 1시간 45분)",
-        "preview": "구엘 저택 도보 3분! 레이알 광장에서 여유롭고 든든한 저녁 식사 ➔ 19:00 광장 분수대 앞 투어 미팅",
+        "typeText": "☕ 테라스 티타임 & 쉼",
+        "title": "☕ 레이알 광장 낭만 테라스 카페 티타임 & 다리 쉼 (19:00 투어 미팅 대기)",
+        "preview": "구엘 저택 도보 3분! 레이알 광장 분수대 앞 테라스 카페(Ocaña / Glaciar)에서 커피 & 다과를 즐기며 편안하게 휴식",
         "details": {
-          "mealSlot": "10일차 저녁 식사: 레이알 광장 주변 (야경 투어 미팅 장소 바로 앞)",
+          "mealSlot": "10일차 오후 티타임 & 쉼: 레이알 광장 야외 테라스 (야경 투어 미팅 장소 바로 앞)",
           "restaurants": [
             {
-              "name": "Les Quinze Nits (레이알 광장 테라스 4.3★)",
-              "url": "https://www.google.com/maps/search/?api=1&query=Les+Quinze+Nits+Barcelona&query_place_id=ChIJl1zX-VeipBIRGqQWf9sQ8u8",
-              "menu": "먹물 빠에야(Arroz Negro), 지중해식 신선 샐러드, 판 콘 토마테",
-              "rating": "4.3★ (11,000+ 리뷰)",
-              "review": "레이알 광장 분수대 바로 앞 야외 테라스. 20:00 야경 투어 미팅 장소와 도보 0분 거리! 아름다운 광장 풍경을 보며 부담 없이 든든하고 정갈한 이른 저녁 식사를 즐기기 최적."
+              "name": "Café Ocaña (레이알 광장 테라스 명소 4.3★)",
+              "url": "https://www.google.com/maps/search/?api=1&query=Ocana+Placa+Reial&query_place_id=ChIJT4N151eipBIR17jQy_Yl7Xk",
+              "menu": "스페셜티 커피, 상그리아, 수제 디저트, 가벼운 타파스 핑거푸드",
+              "rating": "4.3★ (4,200+ 리뷰)",
+              "review": "레이알 광장 아케이드 바로 앞. 19:00 야경 투어 집결 장소(분수대 가로등 앞)와 도보 0분 거리! 아름다운 광장 분수대를 바라보며 편안히 앉아 다리를 쉬기에 최고."
             },
             {
-              "name": "Bodega Biarritz 1881 (구글 4.7★ 타파스 명가)",
-              "url": "https://www.google.com/maps/search/?api=1&query=Bodega+Biarritz+1881&query_place_id=ChIJA-c18FeipBIRw8n-UGwjVLk",
-              "menu": "감바스 알 아히요, 하몽 크로케타, 수제 타파스 핀초 플래터",
-              "rating": "4.7★ (9,320+ 리뷰)",
-              "review": "레이알 광장 도보 2분(150m). 일요일 12:30~23:00 연속 영업! 바르셀로나에서 가장 리뷰가 많고 평점이 높은 최고 인기 타파스 바로 부모님 입맛에 완벽."
+              "name": "Bar Glaciar (1922년 개업 역사 깊은 노포 카페 4.1★)",
+              "url": "https://www.google.com/maps/search/?api=1&query=Bar+Glaciar+Placa+Reial&query_place_id=ChIJt-mB5FeipBIRxU0Hq5Zqj2M",
+              "menu": "카페 콘 레체, 신선 오렌지 주스, 수제 크루아상, 판 콘 토마테",
+              "rating": "4.1★ (1,800+ 리뷰)",
+              "review": "100년 역사를 지닌 유서 깊은 카페. 레이알 광장 모퉁이에 위치하여 여유롭게 차 한잔과 함께 가벼운 다과를 즐기기 좋습니다."
+            },
+            {
+              "name": "Artisa Barcelona (구글 4.6★ 수제 디저트 & 젤라또)",
+              "url": "https://www.google.com/maps/search/?api=1&query=Artisa+Barcelona&query_place_id=ChIJ8_5F5FeipBIRb637G81c_K4",
+              "menu": "이탈리안 정통 수제 젤라또, 와플, 크레페, 카푸치노",
+              "rating": "4.6★ (2,400+ 리뷰)",
+              "review": "레이알 광장 진입로 도보 1분(Carrer de Colom). 당 충전과 시원한 젤라또를 즐기며 앉아서 쉴 수 있는 인기 디저트 카페."
             }
           ],
-          "notes": "구엘 저택 관람 후 람블라스 거리를 건너 레이알 광장으로 이동(도보 3분)하여 18:00부터 19:00까지 앉아서 편안하게 이른 저녁을 드시고 다리를 쉽니다. 19:00 투어 미팅 장소가 바로 광장 분수대 앞이므로, 식사 후 촉박한 이동 없이 정시에 여유롭게 가이드를 만날 수 있습니다."
+          "notes": "★<b>일정 최적화 및 휴식 팁</b>: 구엘 저택 관람 후 람블라스 거리를 건너 레이알 광장으로 이동(도보 3분)하여, 18:00부터 19:00까지 1시간 동안 무리하게 식사를 서두르지 않고 낭만적인 야외 테라스에 앉아 시원한 음료와 디저트를 즐기며 다리를 충분히 쉽니다. 19:00 투어 미팅 장소가 바로 앞 분수대 가로등이므로 정시에 여유롭게 가이드를 만날 수 있습니다."
         }
       },
       {
         "id": "b10-9",
-        "time": "20:00 - 21:30",
+        "time": "19:00 - 20:30",
         "type": "tour",
         "typeText": "🏛️ 고딕·보른 야경 투어",
-        "title": "🏛️ ★[바르셀로나 공식 고딕 & 보른 야경 투어] 20:00 미팅 (1시간 30분 집중 코스)",
-        "preview": "레알광장(19:00 미팅) ➔ 츄레리아(츄러스) ➔ 산펠립네리 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르 ➔ 메모리알 1714(20:45 종료)",
+        "title": "🏛️ ★[바르셀로나 공식 고딕 & 보른 야경 투어] 19:00 정시 미팅 (1시간 30분 집중 코스)",
+        "preview": "레알광장(19:00 미팅) ➔ 츄레리아(츄러스) ➔ 산펠립네리 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르 성당(20:30 종료)",
         "details": {
-          "spotName": "레이알 광장 (19:00 미팅) ➔ 츄레리아 마누엘 산 로만 ➔ 산 펠립 네리 광장 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르 성당 ➔ 메모리알 1714 (20:45 종료)",
-          "description": "20:00 레이알 광장 분수대 앞에서 가이드(오예 투어)와 미팅하여 전문 해설과 함께 고딕 지구와 보른 지구를 걷는 고품격 야경 투어 코스입니다 (스케줄 순서대로 진행):<br><div style='margin-top:10px; display:flex; flex-direction:column; gap:8px;'><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>1️⃣ 레알광장 (Plaça Reial) - ★20:00 미팅!</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+Reial&query_place_id=ChIJJ86B5VeipBIRZnGoGQns3JA' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>투어 집결 장소! 청년 안토니 가우디의 첫 공식 시 정부 협업 프로젝트인 투구 모양 6구 가스 가로등과 화려한 야자수 광장 이야기 (소요 약 20분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>2️⃣ 츄레리아 마누엘 산 로만 (Xurreria Manuel San Román)</b><a href='https://www.google.com/maps/search/?api=1&query=Xurreria+Manuel+San+Roman&query_place_id=ChIJM8l9KfmipBIRt1G_lqU301M' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>1968년 창업! 고딕 지구에서 가장 오랜 전통을 자랑하는 츄러스 명가에서 바삭한 츄러스와 함께 달콤한 당 충전 시간 (소요 약 10분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>3️⃣ 산펠립네리 광장 (Plaça de Sant Felip Neri)</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+de+Sant+Felip+Neri&query_place_id=ChIJuX570vmipBIR-rPtSmhrvdc' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>가우디가 매일같이 걸으며 기도를 올렸던 성당이자, 1938년 스페인 내전 공습의 아픔이 벽면에 그대로 남은 고요한 광장 (영화 '향수' 촬영지, 소요 약 20분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>4️⃣ 바르셀로나 대성당 (Catedral de Barcelona)</b><a href='https://www.google.com/maps/search/?api=1&query=Catedral+de+Barcelona&query_place_id=ChIJg2xxlvmipBIRg1jhdSQR9hY' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>700년 역사가 켜켜이 쌓인 카탈루냐 주민들의 정체성의 심장! 수호성녀 에우랄리아의 유해와 전설이 깃든 웅장한 대성당 야경 (소요 약 20분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>5️⃣ 왕의 광장 (Plaça del Rei)</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+del+Rei&query_place_id=ChIJU7fTDfmipBIRmT5QmiQ0Am4' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>옛 아라곤 왕궁 안뜰! 신대륙 항해를 마친 콜럼버스가 이사벨 여왕과 페르난도 왕을 알현했던 부채꼴 계단과 대항해시대의 서막 (소요 약 15분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>6️⃣ 산타 마리아 델 마르 성당 (Basílica de Santa Maria del Mar)</b><a href='https://www.google.com/maps/search/?api=1&query=Basilica+de+Santa+Maria+del+Mar&query_place_id=ChIJB2tU-viipBIRq7D_67h3X7s' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>보른 지구의 중심! 왕과 귀족이 아닌 평범한 바다 상인과 짐꾼(바스타이소스)들의 손으로 완성된 '바르셀로나의 영혼' 순수 카탈루냐 고딕 성당 (소요 약 10분)</div></div><div style='background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#9a3412;'>7️⃣ 메모리알 1714 (Fossar de les Moreres) - ★21:30 투어 종료!</b><a href='https://www.google.com/maps/search/?api=1&query=Fossar+de+les+Moreres&query_place_id=ChIJ-zP79_iipBIR6x-4-BfX9k8' target='_blank' style='background:#ea580c; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#c2410c; margin-top:3px;'>1714년 바르셀로나 함락 당시 끝까지 도시를 지키다 순절한 수비대원들의 넋을 기리는 영원한 불꽃 추모비 (소요 약 10분)</div></div></div><p style='margin-top:10px; font-size:0.82rem; color:#64748b; background:#f1f5f9; padding:8px 10px; border-radius:6px;'>💡 <b>투어 종료 후 귀가 팁</b>: 투어가 종료되는 산타 마리아 델 마르 성당 / 메모리알 1714 앞 광장에서 남쪽 대로인 Passeig del Born 또는 Pla de Palau(도보 2~3분, 150m)로 나오시면 택시 승강장이 있어 15분 만에 숙소(Occidental 1929) 정문 앞까지 직행합니다.</p>",
-          "notes": "★<b>고딕 야경 투어 예약 완료</b>: 마이리얼트립 [오예 투어!] 2인 확정 (₩36,000 결제 완료 / 예약번호: EXP-20260915-00014690). 20:00 정각 레이알 광장 분수대 앞에서 미팅하여 1시간 30분간 진행됩니다 (21:30 종료).",
+          "spotName": "레이알 광장 (19:00 미팅) ➔ 츄레리아 마누엘 산 로만 ➔ 산 펠립 네리 광장 ➔ 바르셀로나 대성당 ➔ 왕의 광장 ➔ 산타 마리아 델 마르 성당 (20:30 종료)",
+          "description": "19:00 레이알 광장 분수대 앞에서 가이드(오예 투어)와 미팅하여 전문 해설과 함께 고딕 지구와 보른 지구를 걷는 고품격 야경 투어 코스입니다 (스케줄 순서대로 진행):<br><div style='margin-top:10px; display:flex; flex-direction:column; gap:8px;'><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>1️⃣ 레알광장 (Plaça Reial) - ★19:00 미팅!</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+Reial&query_place_id=ChIJJ86B5VeipBIRZnGoGQns3JA' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>투어 집결 장소! 청년 안토니 가우디의 첫 공식 시 정부 협업 프로젝트인 투구 모양 6구 가스 가로등과 화려한 야자수 광장 이야기 (소요 약 15분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>2️⃣ 츄레리아 마누엘 산 로만 (Xurreria Manuel San Román)</b><a href='https://www.google.com/maps/search/?api=1&query=Xurreria+Manuel+San+Roman&query_place_id=ChIJM8l9KfmipBIRt1G_lqU301M' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>1968년 창업! 고딕 지구에서 가장 오랜 전통을 자랑하는 츄러스 명가에서 바삭한 츄러스와 함께 달콤한 당 충전 시간 (소요 약 10분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>3️⃣ 산펠립네리 광장 (Plaça de Sant Felip Neri)</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+de+Sant+Felip+Neri&query_place_id=ChIJuX570vmipBIR-rPtSmhrvdc' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>가우디가 매일같이 걸으며 기도를 올렸던 성당이자, 1938년 스페인 내전 공습의 아픔이 벽면에 그대로 남은 고요한 광장 (영화 '향수' 촬영지, 소요 약 15분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>4️⃣ 바르셀로나 대성당 & 비스베 다리 (Catedral de Barcelona)</b><a href='https://www.google.com/maps/search/?api=1&query=Catedral+de+Barcelona&query_place_id=ChIJg2xxlvmipBIRg1jhdSQR9hY' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>700년 역사가 켜켜이 쌓인 카탈루냐 주민들의 정체성의 심장! 수호성녀 에우랄리아의 유해와 전설이 깃든 웅장한 대성당 야경 (소요 약 20분)</div></div><div style='background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#0f172a;'>5️⃣ 왕의 광장 (Plaça del Rei)</b><a href='https://www.google.com/maps/search/?api=1&query=Placa+del+Rei&query_place_id=ChIJU7fTDfmipBIRmT5QmiQ0Am4' target='_blank' style='background:#0284c7; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#475569; margin-top:3px;'>옛 아라곤 왕궁 안뜰! 신대륙 항해를 마친 콜럼버스가 이사벨 여왕과 페르난도 왕을 알현했던 부채꼴 계단과 대항해시대의 서막 (소요 약 15분)</div></div><div style='background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:10px;'><div style='display:flex; justify-content:space-between; align-items:center;'><b style='color:#9a3412;'>6️⃣ 산타 마리아 델 마르 성당 (Basílica de Santa Maria del Mar) - ★20:30 투어 종료!</b><a href='https://www.google.com/maps/search/?api=1&query=Basilica+de+Santa+Maria+del+Mar&query_place_id=ChIJB2tU-viipBIRq7D_67h3X7s' target='_blank' style='background:#ea580c; color:#fff; padding:4px 10px; border-radius:4px; font-size:0.75rem; text-decoration:none; font-weight:600;'>📍 구글맵 보기</a></div><div style='font-size:0.8rem; color:#c2410c; margin-top:3px;'>보른 지구의 중심! 평범한 바다 상인과 짐꾼(바스타이소스)들의 손으로 완성된 '바르셀로나의 영혼' 순수 카탈루냐 고딕 성당에서 투어 종료 (소요 약 15분)</div></div></div><p style='margin-top:10px; font-size:0.82rem; color:#64748b; background:#f1f5f9; padding:8px 10px; border-radius:6px;'>💡 <b>투어 종료 후 만찬 이동 팁</b>: 20:30에 투어가 종료되면, 도보 4~5분(350m 완전 평지) 거리의 17세기 동굴 레스토랑 <b>Arcano Restaurant cave</b>로 여유롭게 산책하며 21:00 예약 시간에 맞춰 입장합니다.</p>",
+          "notes": "★<b>고딕 야경 투어 예약 완료</b>: 마이리얼트립 [오예 투어!] 2인 확정 (₩36,000 결제 완료 / 예약번호: EXP-20260915-00014690). <b>19:00 정각</b> 레이알 광장 분수대 가우디 가로등 앞에서 미팅하여 1시간 30분간 진행됩니다 (20:30 종료).",
+          "hasTicketFile": true,
           "ticketTitle": "📄 [고딕 야경 투어 예약확인서 보기]",
           "fileObj": userFiles.ticketGothic,
           "whyRecommended": "고딕 지구의 깊은 역사뿐 아니라 보른 지구의 낭만적인 밤 풍경과 츄러스 노포 맛집까지 아우르며, 전문 가이드의 인솔로 야간에도 매우 안전하고 유익하게 산책할 수 있습니다.",
-          "mapUrl": "https://www.google.com/maps/dir/?api=1&origin=Placa+Reial,+Barcelona&destination=Fossar+de+les+Moreres,+Barcelona&waypoints=Xurreria+Manuel+San+Roman,+Barcelona%7CPlaca+de+Sant+Felip+Neri,+Barcelona%7CCatedral+de+Barcelona,+Barcelona%7CPlaca+del+Rei,+Barcelona%7CBasilica+de+Santa+Maria+del+Mar,+Barcelona&travelmode=walking",
-          "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=Placa+Reial,+Barcelona&destination=Fossar+de+les+Moreres,+Barcelona&waypoints=Xurreria+Manuel+San+Roman,+Barcelona%7CPlaca+de+Sant+Felip+Neri,+Barcelona%7CCatedral+de+Barcelona,+Barcelona%7CPlaca+del+Rei,+Barcelona%7CBasilica+de+Santa+Maria+del+Mar,+Barcelona&travelmode=walking"
+          "mapUrl": "https://www.google.com/maps/dir/?api=1&origin=Placa+Reial,+Barcelona&destination=Basilica+de+Santa+Maria+del+Mar,+Barcelona&waypoints=Xurreria+Manuel+San+Roman,+Barcelona%7CPlaca+de+Sant+Felip+Neri,+Barcelona%7CCatedral+de+Barcelona,+Barcelona%7CPlaca+del+Rei,+Barcelona&travelmode=walking",
+          "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=Placa+Reial,+Barcelona&destination=Basilica+de+Santa+Maria+del+Mar,+Barcelona&waypoints=Xurreria+Manuel+San+Roman,+Barcelona%7CPlaca+de+Sant+Felip+Neri,+Barcelona%7CCatedral+de+Barcelona,+Barcelona%7CPlaca+del+Rei,+Barcelona&travelmode=walking"
         }
       },
       {
         "id": "b10-10",
-        "time": "21:30 - 21:50",
-        "type": "transport",
-        "typeText": "🚗 시내 이동",
-        "title": "🚕 [택시 약 15분 직행] 투어 종료(보른 지구) ➔ 호텔(Occidental 1929) 편안한 복귀",
-        "preview": "산타 마리아 델 마르 앞 대로변 택시 승차 ➔ Gran Via 대로 직행 ➔ 호텔 정문 하차 (약 €10~12)",
+        "time": "20:45 - 22:30",
+        "type": "meal",
+        "typeText": "🍽️ 동굴 만찬",
+        "title": "🍽️ 저녁 만찬: 17세기 석조 아치 동굴 다이닝 [Arcano Restaurant cave (4.6★)]",
+        "preview": "투어 종료 지점 도보 5분(350m)! 21:00 예약 필수 ➔ 17세기 석조 아치 동굴에서 즐기는 최고급 숯불 안구스 스테이크 & 와인 만찬",
         "details": {
-          "transport": "공식 택시 또는 우버/볼트 (소요시간 약 15분)",
-          "route": "산타 마리아 델 마르 / 메모리알 1714 (Pla de Palau) ➔ Hotel Occidental Barcelona 1929",
-          "notes": "투어가 종료된 후 피로가 누적된 어머니를 모시고 밤늦게 메트로 환승이나 도보 이동 없이, 성당 바로 앞 Pla de Palau 대로변에서 택시를 타고 15분 만에 호텔 정문 문 앞까지 직행하여 가장 쾌적하게 복귀합니다.",
-          "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=Basilica+de+Santa+Maria+del+Mar,+Barcelona&destination=Hotel+Occidental+Barcelona+1929,+Carrer+Creu+Coberta,+Barcelona"
+          "mealSlot": "10일차 저녁 만찬 [보른 지구 / 21:00 사전 예약 권장]",
+          "restaurants": [
+            {
+              "name": "Arcano Restaurant cave (구글 4.6★ 동굴 스테이크 다이닝)",
+              "url": "https://www.google.com/maps/search/?api=1&query=Arcano+Restaurant+cave&query_place_id=ChIJb-E-RfmipBIRmDyFS5ND__8",
+              "menu": "최상급 아르헨티나 숯불 안구스 스테이크(Bife de Chorizo / Solomillo), 송아지 볼살 라비올리, 트러플 감자튀김, 문어 구이, 프리미엄 스페인 레드와인",
+              "rating": "4.6★ (6,080+ 리뷰)",
+              "review": "Carrer dels Mercaders 10. 17세기 옛 마구간을 개조한 낭만적인 돌벽과 석조 아치 돔 천장('Cave')이 압도적인 분위기를 자랑하는 보른 지구 최고의 명가. 어머니와 투어 후 오붓하고 품격 있는 분위기에서 여행 최고의 스테이크 만찬을 즐기기에 완벽합니다."
+            }
+          ],
+          "notes": "★<b>21:00 사전 예약 권장</b>: 현지인과 여행자 모두에게 극찬받는 명소로 공식 웹사이트(arcanobarcelona.com) 또는 TheFork에서 <b>21:00</b>로 사전 예약해 두시면 웨이팅 없이 완벽한 저녁을 즐기실 수 있습니다.<br>• <b>투어 후 이동</b>: 20:30 투어 종료 장소(산타 마리아 델 마르)에서 북쪽으로 완만한 평지 골목을 따라 350m(도보 4~5분)만 걸어가시면 바로 식당에 도착하여 여유롭습니다.",
+          "mapUrl": "https://www.google.com/maps/search/?api=1&query=Arcano+Restaurant+cave&query_place_id=ChIJb-E-RfmipBIRmDyFS5ND__8",
+          "bookingLink": "https://www.arcanobarcelona.com/",
+          "mapBtnText": "🗺️ Arcano Restaurant 구글맵 위치 보기"
         }
       },
       {
         "id": "b10-11",
-        "time": "21:05 -",
+        "time": "22:30 - 22:50",
+        "type": "transport",
+        "typeText": "🚗 시내 이동",
+        "title": "🚕 [택시 약 10분 직행] Arcano 식당 ➔ 호텔(Occidental 1929) 편안한 복귀",
+        "preview": "식당 바로 옆 Via Laietana 대로변 택시 승차 ➔ Gran Via 대로 직행 ➔ 호텔 정문 하차 (약 €8~10)",
+        "details": {
+          "transport": "공식 택시 또는 우버/볼트 (소요시간 약 10~12분, 요금 약 €8~10)",
+          "route": "Arcano Restaurant (Carrer dels Mercaders ➔ Via Laietana) ➔ Gran Via 대로 ➔ Hotel Occidental Barcelona 1929",
+          "notes": "만찬을 마친 후 식당에서 도보 1분(80m) 거리의 대형 간선도로인 Via Laietana(비아 라이에타나)로 나오시면 빈 택시가 수시로 지나가며 택시 승강장이 있습니다. 택시를 타시면 10분 만에 호텔 정문 바로 앞까지 편안하게 직행합니다.",
+          "routeUrl": "https://www.google.com/maps/dir/?api=1&origin=Arcano+Restaurant+cave,+Barcelona&destination=Hotel+Occidental+Barcelona+1929,+Barcelona&travelmode=driving"
+        }
+      },
+      {
+        "id": "b10-12",
+        "time": "22:50 -",
         "type": "hotel",
         "typeText": "🏨 숙소 복귀",
         "title": "🏨 숙소(Occidental 1929) 복귀 & 내일 그라나다 비행 대비 짐 정리 및 안락한 숙면",
@@ -4045,7 +4204,6 @@ const itineraryData = [
     ]
   },
   {
-    "region": 4,
     "day": 11,
     "date": "10/05 (월)",
     "dayTitle": "11일차: 구엘 공원·그라시아 가우디 외관 & 개선문·시우타델라 공원·그라나다 야간 이동",
@@ -4873,7 +5031,7 @@ const itineraryData = [
     "dayTitle": "14일차: 그라시아 자유 시간·12시 체크아웃 & BCN 출국·도하행 비행",
     "isFinalized": true,
     "fullRoute": {
-      "summary": "① 🏨 Almanac Barcelona(08:30 5성급 조식 뷔페) ➔ ② 🛍️ 그라시아 거리·카탈루냐 광장 여유로운 자유 시간(09:45 카사바트요·카사밀라 외관 감상 / 엘코르테잉글레스 고메관 쇼핑 / 호텔 힐링) ➔ ① 🏨 숙소(11:30 최종 패킹 & 12:00 체크아웃) ➔ ③ 🍽️ 고별 점심 식사(12:00 Batea / El Nacional) ➔ ④ 🚕 공항 택시 이동(13:15) ➔ ⑤ 🛫 BCN 공항 T1 도착(13:45 DIVA 텍스리펀 승인 & 카타르항공 수속) ➔ ⑥ ✈️ 바르셀로나 출국(16:35 QR 146 도하행)",
+      "summary": "① 🏨 Almanac Barcelona(08:30 5성급 조식 뷔페) ➔ ② 🛍️ 그라시아 거리·카탈루냐 광장 여유로운 자유 시간(09:45 카사바트요·카사밀라 외관 감상 / 엘코르테잉글레스 고메관 쇼핑 / 호텔 힐링) ➔ ① 🏨 숙소(11:30 최종 패킹 & 12:00 체크아웃) ➔ ③ 🍽️ 고별 점심 식사(12:00 Batea / El Nacional) ➔ ④ 🚕 공항 택시 이동(13:30) ➔ ⑤ 🛫 BCN 공항 T1 도착(14:00 DIVA 텍스리펀 승인 & 카타르항공 수속) ➔ ⑥ ✈️ 바르셀로나 출국(17:00 QR 146 도하행)",
       "mapUrl": "https://www.google.com/maps/dir/Almanac+Barcelona,+Gran+Via+de+les+Corts+Catalanes,+Barcelona/Casa+Batllo,+Pg.+de+Gracia,+Barcelona/Casa+Mila,+Pg.+de+Gracia,+Barcelona/Placa+de+Catalunya,+Barcelona/Aeroport+de+Barcelona-El+Prat+T1,+Barcelona",
       "myMapUrl": "https://www.google.com/maps/d/viewer?mid=1M2dq4827Na9Kj0VORpknPoxkLTKzo74",
       "myMapEmbedUrl": "https://www.google.com/maps/d/embed?mid=1M2dq4827Na9Kj0VORpknPoxkLTKzo74"
@@ -4936,7 +5094,7 @@ const itineraryData = [
       },
       {
         "id": "b14-4",
-        "time": "12:00 - 13:15",
+        "time": "12:00 - 13:30",
         "type": "meal",
         "typeText": "🍽️ 고별 점심",
         "title": "🍽️ 점심 식사: 바르셀로나 마지막 오찬 [Batea / El Nacional]",
@@ -4971,7 +5129,7 @@ const itineraryData = [
       },
       {
         "id": "b14-5",
-        "time": "13:15 - 13:45",
+        "time": "13:30 - 14:00",
         "type": "transport",
         "typeText": "🚗 공항 이동",
         "title": "🚕 [공항 택시 약 25분] 호텔 ➔ 바르셀로나 엘프라트 공항(BCN T1) 출국장 이동",
@@ -4985,15 +5143,15 @@ const itineraryData = [
       },
       {
         "id": "b14-6",
-        "time": "13:45 - 16:35",
+        "time": "14:00 - 17:00",
         "type": "flight",
         "typeText": "🛫 출국 수속",
-        "title": "🛫 BCN T1 공항 도착 (출발 2시간 50분 전) & DIVA 텍스리펀·출국 수속",
+        "title": "🛫 BCN T1 공항 도착 (출발 3시간 전) & DIVA 텍스리펀·출국 수속",
         "preview": "DIVA 키오스크 무인 바코드 스캔 ➔ 카타르항공 수하물 위탁 ➔ 출국심사 ➔ 면세구역 휴식",
         "details": {
           "spotName": "바르셀로나 엘프라트 공항 (BCN) Terminal 1",
-          "description": "국제선 출발 2시간 50분 전 도착하여 여유롭고 안전하게 귀국 수속을 진행합니다.<br><br>① <b>DIVA 텍스리펀 무인 승인</b>: T1 출국장 세관 구역의 'DIVA 키오스크'에서 쇼핑 영수증 QR코드를 스캔합니다. 세관 직원 대면이나 물품 검사 없이 화면에 초록색 완료 표시가 뜨면 즉시 디지털 승인 완료됩니다 (소요 3~5분).<br>② <b>카타르항공 카운터 체크인</b>: 탑승권 발권 및 위탁 수하물(인당 25kg)을 부칩니다.<br>③ <b>보안검색 & 여권 출국 심사</b>: 자동 출국 게이트 통과 후 면세구역으로 진입합니다.<br>④ <b>면세구역 휴식 & 게이트 대기</b>: 잔여 유로화 사용, 면세점 구경 및 게이트 앞 라운지/카페에서 다리를 편안히 쉬며 탑승을 대기합니다.",
-          "whyRecommended": "국제선 장거리 비행 전 넉넉한 2시간 50분 버퍼를 두어, 어머님이 서서 줄 서서 기다리는 스트레스 없이 여유롭게 출국장 라운지 벤치에서 휴식을 취하실 수 있습니다.",
+          "description": "국제선 출발 3시간 전(14:00) 도착하여 여유롭고 안전하게 귀국 수속을 진행합니다.<br><br>① <b>DIVA 텍스리펀 무인 승인</b>: T1 출국장 세관 구역의 'DIVA 키오스크'에서 쇼핑 영수증 QR코드를 스캔합니다. 세관 직원 대면이나 물품 검사 없이 화면에 초록색 완료 표시가 뜨면 즉시 디지털 승인 완료됩니다 (소요 3~5분).<br>② <b>카타르항공 카운터 체크인</b>: 탑승권 발권 및 위탁 수하물(인당 25kg)을 부칩니다.<br>③ <b>보안검색 & 여권 출국 심사</b>: 자동 출국 게이트 통과 후 면세구역으로 진입합니다.<br>④ <b>면세구역 휴식 & 게이트 대기</b>: 잔여 유로화 사용, 면세점 구경 및 게이트 앞 라운지/카페에서 다리를 편안히 쉬며 탑승을 대기합니다.",
+          "whyRecommended": "국제선 장거리 비행 전 넉넉한 3시간 버퍼(14:00 도착)를 두어, 어머님이 서서 줄 서서 기다리는 스트레스 없이 여유롭게 출국장 라운지 벤치에서 휴식을 취하실 수 있습니다.",
           "ticketLink": "https://www.qatarairways.com",
           "hasMultiFiles": true,
           "fileButtons": [
@@ -5020,15 +5178,15 @@ const itineraryData = [
       },
       {
         "id": "b14-7",
-        "time": "16:35 - 23:55",
+        "time": "17:00 - 00:20 (+1일)",
         "type": "flight",
         "typeText": "✈️ 귀국 항공",
         "title": "바르셀로나 ➔ 도하 이동 (카타르항공 QR 146)",
-        "preview": "16:35 BCN T1 출발 ➔ 23:55 도하(DOH) 도착 (비행 6시간 20분)",
+        "preview": "17:00 BCN T1 출발 ➔ 00:20 도하(DOH) 도착 (비행 6시간 20분)",
         "details": {
           "flightInfo": "카타르항공 QR 146 (BCN ➔ DOH, B787-9 드림라이너)",
-          "schedule": "16:35 BCN T1 출발 ➔ 23:55 DOH 하마드 국제공항 도착",
-          "notes": "기내 엔터테인먼트 및 쾌적한 기내식 식사, 도하 공항 환승 대기 2시간 10분.",
+          "schedule": "17:00 BCN T1 출발 ➔ 00:20 DOH 하마드 국제공항 도착 (+1일 10/09)",
+          "notes": "기내 엔터테인먼트 및 쾌적한 기내식 식사, 도하 공항 환승 대기 3시간 10분 (00:20 도착 ➔ 03:30 출발).",
           "ticketLink": "https://www.qatarairways.com",
           "hasMultiFiles": true,
           "fileButtons": [
@@ -5062,20 +5220,20 @@ const itineraryData = [
     "dayTitle": "15일차: 도하 환승 ➔ 인천 도착 (최종 귀국 완료)",
     "isFinalized": true,
     "fullRoute": {
-      "summary": "① 🛬 도하 하마드 공항(23:55 도착 & 2시간 10분 안락한 환승 대기) ➔ ② ✈️ 카타르항공 QR 858 탑승(02:05) ➔ ③ 🛬 인천국제공항 제1여객터미널 도착 및 귀국(17:05)"
+      "summary": "① 🛬 도하 하마드 공항(00:20 도착 & 3시간 10분 안락한 환승 대기) ➔ ② ✈️ 카타르항공 QR 858 탑승(03:30) ➔ ③ 🛬 인천국제공항 제1여객터미널 도착 및 귀국(18:30)"
     },
     "items": [
       {
         "id": "b15-1",
-        "time": "02:05 - 17:05",
+        "time": "03:30 - 18:30",
         "type": "flight",
         "typeText": "✈️ 귀국 항공",
         "title": "도하 ➔ 인천 도착 (카타르항공 QR 858)",
-        "preview": "17:05 인천국제공항 T1 정시 도착 & 14박 15일 포르투갈·스페인 효도 여행 완료",
+        "preview": "18:30 인천국제공항 T1 정시 도착 & 14박 15일 포르투갈·스페인 효도 여행 완료",
         "details": {
           "flightInfo": "카타르항공 QR 858 (DOH ➔ ICN, A350-1000 최신 기종)",
-          "schedule": "도하(DOH) 02:05 출발 ➔ 인천(ICN T1) 17:05 정시 도착",
-          "notes": "수하물 수취 후 귀가. 10월 9일 한글날 공휴일 오후에 여유롭게 도착하여 주말까지 집에서 충분한 여독을 푸실 수 있습니다. 14박 15일 동안의 포르투갈 & 스페인 효도 여행이 성공적으로 완료되었습니다!",
+          "schedule": "도하(DOH) 03:30 출발 ➔ 인천(ICN T1) 18:30 정시 도착",
+          "notes": "수하물 수취 후 귀가. 10월 9일 한글날 공휴일 저녁(18:30)에 여유롭게 도착하여 주말까지 집에서 충분한 여독을 푸실 수 있습니다. 14박 15일 동안의 포르투갈 & 스페인 효도 여행이 성공적으로 완료되었습니다!",
           "ticketLink": "https://www.qatarairways.com",
           "hasMultiFiles": true,
           "fileButtons": [
@@ -5213,6 +5371,11 @@ ${hasWaypoints ? `
 let cardsHtml = dayData.items.map((item) => {   
 let cardClass = "card";   
 if (item.type === "transport") cardClass += " card-transport";   
+
+let ticketBadge = "";
+if (item.details && (item.details.hasTicketFile || item.details.hasMultiFiles)) {
+  ticketBadge = `<div style="margin-top:6px;"><span style="background:#ecfdf5; color:#047857; border:1px solid #10b981; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">📄 원본 예약 확인증/바우처 첨부됨</span></div>`;
+}
   
 return `   
 <div class="${cardClass}" onclick="openModal('${currentRegion}', '${currentDay}', '${item.id}')">   
@@ -5222,9 +5385,9 @@ return `
 </div>   
 <div class="card-title">${item.title}</div>   
 <div class="card-preview">${item.preview}</div>   
+${ticketBadge}
 </div>   
-`;   
-}).join('');   
+`;   }).join('');   
   
 container.innerHTML = dayHeader + fullRouteHtml + cardsHtml;   
 }   
@@ -5643,11 +5806,18 @@ document.getElementById('modalOverlay').classList.add('active');
 document.body.style.overflow = 'hidden';   
 }   
 function closeModal() {   
-document.getElementById('modalOverlay').classList.remove('active');   
+  const overlay = document.getElementById('modalOverlay');   
+  if (overlay) overlay.classList.remove('active');   
+  document.body.style.overflow = '';   
+  document.documentElement.style.overflow = '';   
 }   
   
 document.getElementById('modalOverlay').addEventListener('click', function(e) {   
-if (e.target === this) closeModal();   
+  if (e.target === this) closeModal();   
+});   
+  
+document.addEventListener('keydown', function(e) {   
+  if (e.key === 'Escape' || e.key === 'Esc') closeModal();   
 });   
   
 // Add Drag-to-Scroll functionality for Region Tabs   
@@ -5703,7 +5873,10 @@ fixedExpenses: [
 { id: "f16", cat: "투어", name: "카탈루냐 국립미술관(MNAC) 공식 입장권 (2인 무료확정)", amount: 0 },   
 { id: "f17", cat: "교통", name: "사르파(Sarfa) 직행 버스 왕복 2인 (€67.60 예산반영)", amount: 110105 },   
 { id: "f18", cat: "투어", name: "바르셀로나 고딕 & 보른 야경 투어 (2인, 마이리얼트립 확정)", amount: 36000 },   
-{ id: "f19", cat: "투어", name: "투어라이브 (오디오 가이드 2인 전권)", amount: 59000 }   
+{ id: "f19", cat: "투어", name: "투어라이브 (오디오 가이드 2인 전권)", amount: 59000 },   
+{ id: "f20", cat: "준비물", name: "애플 에어태그 2세대 (2개)", amount: 80000 },   
+{ id: "f21", cat: "준비물", name: "도난방지가방", amount: 100000 },   
+{ id: "f22", cat: "준비물", name: "도난방지 추가용품", amount: 30000 }   
 ],
 transactions: []   
 , "4_9": [{"num": 1, "name": "🏨 Occidental 1929", "lat": 41.37537, "lng": 2.14763, "desc": "11:35 짐보관 & 14:30 체크인", "details": "Occidental Barcelona 1929 체크인 및 짐 정리", "isHotel": true}, {"num": 2, "name": "🏛️ 아레나스 쇼핑몰", "lat": 41.3762, "lng": 2.1492, "desc": "11:50 쇼핑 & 마트 장보기", "details": "토요일 전 매장 오픈! 패션 매장 및 지하 Mercadona 마트 장보기"}, {"num": 3, "name": "🍽️ KimchiMama", "lat": 41.37594, "lng": 2.14344, "desc": "13:30 한식 오픈런 점심", "details": "든든하고 칼칼한 김치찌개 & 불고기 만찬 (4.8★)"}, {"num": 4, "name": "☕ Salts 테라스 바", "lat": 41.36941, "lng": 2.16423, "desc": "15:15 올림픽 풀 뷰 티타임", "details": "택시 등반 ➔ 올림픽 다이빙 풀 & 바르셀로나 시내 스카이라인 조망"}, {"num": 5, "name": "🌳 라리발 정원 & 그리스 극장", "lat": 41.3698, "lng": 2.1585, "desc": "16:00 숲길 힐링 산책", "details": "사이프러스 숲길, 분수대와 석조 회랑이 어우러진 그늘 힐링 산책로"}, {"num": 6, "name": "🌅 MNAC 궁전 계단 테라스", "lat": 41.36877, "lng": 2.15336, "desc": "18:30 일몰 & 매직아워", "details": "버스커 라이브 & 테라스에서 19:22 정시 일몰 & 19:40 매직아워 조망"}, {"num": 7, "name": "🍽️ IL Golfo Di Napoli / TAPS Bar", "lat": 41.37229, "lng": 2.15529, "desc": "19:40 나폴리 화덕피자 / 타파스", "details": "정통 나폴리 피자 & 해산물 파스타 또는 감성 타파스 만찬"}, {"num": 8, "name": "⛲ 몬주익 마법의 분수", "lat": 41.37116, "lng": 2.15174, "desc": "21:00 매직 분수 쇼 직관", "details": "음악과 오색 조명의 화려한 분수 쇼 직관 (뒤편 4개의 기둥 입체 뷰 연계)"}]};   
@@ -5862,17 +6035,19 @@ flight: currentBudget.fixedExpenses.filter(f => f.cat === "항공").reduce((s, i
 hotel: currentBudget.fixedExpenses.filter(f => f.cat === "숙박").reduce((s, i) => s + Number(i.amount||0), 0),   
 tour: currentBudget.fixedExpenses.filter(f => f.cat === "투어").reduce((s, i) => s + Number(i.amount||0), 0) + ((currentBudget.varExpenses.find(v => v.id === "tour") || {}).budget || 0),   
 transport: currentBudget.fixedExpenses.filter(f => f.cat === "교통").reduce((s, i) => s + Number(i.amount||0), 0) + ((currentBudget.varExpenses.find(v => v.id === "transport") || {}).budget || 0),   
+gear: currentBudget.fixedExpenses.filter(f => f.cat === "준비물").reduce((s, i) => s + Number(i.amount||0), 0),   
 food: (currentBudget.varExpenses.find(v => v.id === "food") || {}).budget || 0,   
 shopping: (currentBudget.varExpenses.find(v => v.id === "shopping") || {}).budget || 0,   
-other: currentBudget.fixedExpenses.filter(f => f.cat === "기타").reduce((s, i) => s + Number(i.amount||0), 0) + currentBudget.varExpenses.filter(v => !["food", "shopping", "transport", "tour"].includes(v.id)).reduce((s, i) => s + Number(i.budget||0), 0)   
+other: currentBudget.fixedExpenses.filter(f => !["항공", "숙박", "투어", "교통", "준비물"].includes(f.cat)).reduce((s, i) => s + Number(i.amount||0), 0) + currentBudget.varExpenses.filter(v => !["food", "shopping", "transport", "tour"].includes(v.id)).reduce((s, i) => s + Number(i.budget||0), 0)   
 };   
   
 const chartItems = [   
 { label: "✈️ 항공", val: catTotals.flight, color: "#0284c7" },   
 { label: "🏨 숙박", val: catTotals.hotel, color: "#6366f1" },   
-{ label: "🏛️ 투어/입장료", val: catTotals.tour, color: "#8b5cf6" },   
+{ label: "🎟️ 투어/입장료", val: catTotals.tour, color: "#8b5cf6" },   
+{ label: "🎒 준비물", val: catTotals.gear, color: "#10b981" },   
 { label: "🍽️ 식비", val: catTotals.food, color: "#f59e0b" },   
-{ label: "🏛️ 쇼핑/비상금", val: catTotals.shopping, color: "#ec4899" },   
+{ label: "🛍️ 쇼핑", val: catTotals.shopping, color: "#ec4899" },   
 { label: "🚆 시내교통/열차", val: catTotals.transport, color: "#0d9488" }   
 ];   
   
@@ -5994,29 +6169,127 @@ ${pct.toFixed(1)}% 사용 (${statusName})
 }).join("");   
 }   
   
-function renderFixedExpensesTable() {   
-const tbody = document.getElementById("fixedTableBody");   
-if (!tbody) return;   
+let openFixedCategories = {
+  "항공": false,
+  "숙박": false,
+  "교통": false,
+  "투어": false,
+  "준비물": false
+};
+
+function toggleFixedGroup(cat) {
+  openFixedCategories[cat] = !openFixedCategories[cat];
+  renderFixedExpensesTable();
+}
+
+function toggleAllFixedGroups(openState) {
+  const cats = [...new Set(currentBudget.fixedExpenses.map(i => i.cat || "기타"))];
+  cats.forEach(c => { openFixedCategories[c] = openState; });
+  renderFixedExpensesTable();
+}
+
+function renderFixedExpensesTable() {
+  const container = document.getElementById("fixedGroupsContainer");
+  const tbody = document.getElementById("fixedTableBody");
   
-const totalFixed = currentBudget.fixedExpenses.reduce((s, i) => s + (Number(i.amount) || 0), 0);   
-document.getElementById("fixedTotalLabel").innerText = formatKRW(totalFixed);   
+  const totalFixed = currentBudget.fixedExpenses.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const totalLabel = document.getElementById("fixedTotalLabel");
+  if (totalLabel) totalLabel.innerText = formatKRW(totalFixed);
   
-tbody.innerHTML = currentBudget.fixedExpenses.map((item, idx) => {   
-const eur = formatEUR(item.amount);   
-return `   
-<tr>   
-<td style="font-weight:700; color:#0284c7;">${item.cat}</td>   
-<td>${item.name}</td>   
-<td style="text-align:right;">   
-<input type="number" class="fixed-input" value="${item.amount}" oninput="updateFixedAmount(${idx}, this.value)" step="1000">   
-</td>   
-<td style="text-align:right; font-weight:600; color:#64748b;">${eur}</td>   
-<td style="text-align:center;">   
-<button style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.9rem;" onclick="deleteFixedExpense(${idx})" title="항목 삭제">✕</button>   
-</td>   
-</tr>   
-`;   
-}).join("");   
+  if (!container) {
+    if (tbody) {
+      tbody.innerHTML = currentBudget.fixedExpenses.map((item, idx) => `
+        <tr>
+          <td style="font-weight:700; color:#0284c7;">${item.cat}</td>
+          <td>${item.name}</td>
+          <td style="text-align:right;"><input type="number" class="fixed-input" value="${item.amount}" onchange="updateFixedAmount(${idx}, this.value)"></td>
+          <td style="text-align:right;">${formatEUR(item.amount)}</td>
+          <td style="text-align:center;"><button onclick="deleteFixedExpense(${idx})">✕</button></td>
+        </tr>
+      `).join("");
+    }
+    return;
+  }
+  
+  const catMeta = {
+    "항공": { icon: "✈️", title: "항공", color: "#0284c7", badgeBg: "#e0f2fe" },
+    "숙박": { icon: "🏨", title: "숙박", color: "#6366f1", badgeBg: "#ede9fe" },
+    "교통": { icon: "🚆", title: "교통 (기차/버스)", color: "#0d9488", badgeBg: "#ccfbf1" },
+    "투어": { icon: "🎟️", title: "투어 / 입장권", color: "#8b5cf6", badgeBg: "#f3e8ff" },
+    "준비물": { icon: "🎒", title: "준비물 / 보안용품", color: "#10b981", badgeBg: "#d1fae5" },
+    "기타": { icon: "📦", title: "기타 고정지출", color: "#64748b", badgeBg: "#f1f5f9" }
+  };
+  
+  // Group items by category, preserving the global index for update/delete
+  const standardOrder = ["항공", "숙박", "교통", "투어", "준비물"];
+  const allCats = [...new Set(currentBudget.fixedExpenses.map(i => i.cat || "기타"))];
+  const orderedCats = [...standardOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !standardOrder.includes(c))];
+  
+  let html = "";
+  
+  orderedCats.forEach(cat => {
+    const meta = catMeta[cat] || { icon: "📌", title: cat, color: "#0284c7", badgeBg: "#e0f2fe" };
+    const itemsWithIdx = currentBudget.fixedExpenses
+      .map((item, idx) => ({ ...item, realIdx: idx }))
+      .filter(item => (item.cat || "기타") === cat);
+      
+    if (itemsWithIdx.length === 0) return;
+    
+    const catTotalKRW = itemsWithIdx.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    const catTotalEUR = formatEUR(catTotalKRW);
+    const isOpen = !!openFixedCategories[cat];
+    
+    html += `
+      <div class="fixed-group-card">
+        <div class="fixed-group-header ${isOpen ? 'open' : ''}" onclick="toggleFixedGroup('${cat}')">
+          <div class="group-header-left">
+            <span style="font-size:1.15rem;">${meta.icon}</span>
+            <span class="group-cat-title">${meta.title}</span>
+            <span class="group-count-badge">${itemsWithIdx.length}건</span>
+          </div>
+          <div class="group-header-right">
+            <span class="group-total-krw">${formatKRW(catTotalKRW)}</span>
+            <span class="group-total-eur">(${catTotalEUR})</span>
+            <span class="group-toggle-arrow">${isOpen ? '▲' : '▼'}</span>
+          </div>
+        </div>
+        
+        <div class="fixed-group-body ${isOpen ? 'open' : ''}">
+          <table class="fixed-group-table">
+            <thead>
+              <tr style="border-bottom: 1.5px solid #e2e8f0; font-size:0.78rem; color:#64748b; font-weight:800;">
+                <th style="text-align:left; padding:6px 4px;">상세 내역명</th>
+                <th style="text-align:right; width:110px; padding:6px 4px;">금액(KRW)</th>
+                <th style="text-align:right; width:75px; padding:6px 4px;">EUR(환산)</th>
+                <th style="text-align:center; width:35px; padding:6px 4px;">삭제</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsWithIdx.map(item => `
+                <tr>
+                  <td style="font-weight:600; color:#1e293b;">${item.name}</td>
+                  <td style="text-align:right;">
+                    <input type="number" class="fixed-input" value="${item.amount}" onchange="updateFixedAmount(${item.realIdx}, this.value)" step="1000">
+                  </td>
+                  <td style="text-align:right; font-weight:600; color:#64748b; font-size:0.82rem;">${formatEUR(item.amount)}</td>
+                  <td style="text-align:center;">
+                    <button type="button" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.95rem;" onclick="deleteFixedExpense(${item.realIdx})" title="항목 삭제">✕</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+          <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:8px; padding-top:6px; border-top:1px dashed #e2e8f0; font-size:0.82rem;">
+            <span style="color:#64748b;">${meta.title} 소계:</span>
+            <span style="font-weight:900; color:#0284c7;">${formatKRW(catTotalKRW)}</span>
+            <span style="color:#64748b;">(${catTotalEUR})</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
 }   
   
 function updateVarBudget(id, val) {   
@@ -6130,6 +6403,9 @@ function submitNewFixedExpense() {
   }
   const newId = "f_" + Date.now();
   currentBudget.fixedExpenses.push({ id: newId, cat: cat, name: name, amount: amount });
+  if (typeof openFixedCategories !== 'undefined') {
+    openFixedCategories[cat] = true;
+  }
   saveBudget();
   renderBudgetDashboard();
   toggleFixedAddForm();
@@ -6355,7 +6631,7 @@ const calendarDaysData = [
     title: "1일차: 리스본 입국·카드수령 & 3대 광장·상 페드루 전망대 노을",
     attractions: ["리스본 공항 T1", "피게이라 광장", "호시우 광장", "헤스타우라도르스 광장", "상 페드루 전망대", "Marisqueira UMA"],
     activities: [
-      "🛬 카타르항공(QR 859/341) 13:35 리스본 T1 입국, 리스보아 카드 수령 및 우버로 숙소 이동 (15:00 체크인)",
+      "🛬 카타르항공(QR 859/341) 13:40 리스본 T1 입국, 리스보아 카드 수령 및 우버로 숙소 이동 (15:00 체크인)",
       "🏛️ 바이샤 3대 광장(피게이라, 호시우, 헤스타우라도르스) 평지 적응 산책",
       "🌅 글로리아 푸니쿨라 타고 상 페드루 전망대 올라 황금빛 노을 감상",
       "🍽️ Marisqueira UMA에서 푸짐한 해물밥 만찬 즐기며 여유로운 첫날 마무리"
@@ -6363,7 +6639,10 @@ const calendarDaysData = [
     transit: "카타르항공 (인천➔도하➔리스본) / 공항 ➔ 숙소 우버 (약 20분)",
     hotel: "리스본 바이샤 에어비앤비 (R. do Regedor, 3박)",
     motherCare: "장시간 비행 후 첫날이므로 언덕 등반 배제, 평지 위주 산책 및 쾌적한 숙소 휴식",
-    links: [{ reg: 1, day: 1, text: "📱 1일차 리스본 상세 일정표 바로가기 ➔" }]
+    links: [
+      { reg: 1, day: 1, text: "📱 1일차 리스본 상세 일정표 바로가기 ➔" },
+      { url: "https://drive.google.com/file/d/1JhKoG5AcSsshRLMJ3Myl18S2C6EIGtM_/view?usp=drivesdk", text: "📄 [리스보아 카드 24시간권] 공식 예매 바우처 보기 (PDF) ➔", isSecondary: true }
+    ]
   },
   {
     day: 2,
@@ -6595,17 +6874,17 @@ const calendarDaysData = [
     line1: { text: "🇪🇸 바르셀로나", type: "pill-start", pillClass: "pill-bcn" },
     line2: null,
     line3: "고딕지구",
-    title: "10일차: 카탈루냐 미술관 MNAC·구엘 저택 & 레이알 광장·고딕 지구 야경 투어",
-    attractions: ["카탈루냐 미술관 MNAC", "호안 마라갈 왕실 정원", "구엘 저택", "레이알 광장", "츄레리아", "바르셀로나 대성당", "산타 마리아 델 마르"],
+    title: "10일차: MNAC·구엘 저택 & 레이알 광장 티타임·고딕 야경 투어·Arcano 동굴 만찬",
+    attractions: ["카탈루냐 미술관 MNAC", "호안 마라갈 왕실 정원", "구엘 저택", "레이알 광장", "고딕·보른 야경 투어", "Arcano Restaurant cave"],
     activities: [
       "🏛️ 웅장한 국립 카탈루냐 미술관(MNAC) 로마네스크 벽화 관람 & 푸른 왕실 정원 산책",
       "🛏️ 점심 식사 후 호텔 복귀하여 침대에서 넉넉한 휴식으로 체력 비축",
-      "🏰 가우디의 초기 대저택 '구엘 저택' 내부 관람 (중앙 돔 살롱과 환상적인 옥상 굴뚝)",
-      "✨ 야자수 드리운 레이알 광장 석식 & 갓 튀긴 츄레리아 츄러스 맛보며 고딕·보른 지구 야경 투어"
+      "🏰 가우디의 초기 대저택 '구엘 저택' 16:30 내부 관람 후 레이알 광장 테라스 티타임 쉼 (18:00~19:00)",
+      "✨ 19:00 레이알 광장 미팅 ➔ 1시간 30분 고딕·보른 야경 투어 후 21:00 Arcano 17세기 동굴 레스토랑 스테이크 만찬"
     ],
-    transit: "메트로 L3 (Liceu역) 및 에스파냐 광장 도보",
+    transit: "메트로 L3 (Liceu역) + 투어 후 복귀 시 택시 (Via Laietana ➔ 호텔 10분)",
     hotel: "Occidental Barcelona 1929 (에스파냐 광장)",
-    motherCare: "MNAC 내부 엘리베이터 및 벤치 적극 활용, 오후 충분한 숙소 낮잠으로 저녁 야경 산책 준비",
+    motherCare: "19:00 투어 전 레이알 광장 테라스에서 충분히 다리를 쉬고, 투어 종료 후 350m 거리의 Arcano에서 품격 있는 만찬",
     links: [{ reg: 4, day: 10, text: "📱 10일차 MNAC·구엘·고딕 야경 상세 일정표 바로가기 ➔" }]
   },
   {
@@ -6710,8 +6989,8 @@ const calendarDaysData = [
     activities: [
       "☕ 5성급 여유 조식 후 호텔 주변 그라시아 거리 마지막 산책 & 12:00 레이트 체크아웃",
       "🍽️ 인근 미식 레스토랑 Batea에서 스페인 고별 오찬 즐기기",
-      "🚕 13:15 공항 택시 탑승 ➔ 13:45 BCN T1 도착 (출발 2시간 50분 전 여유 도착)",
-      "📄 DIVA 키오스크에서 바코드 1분 전자 텍스리펀 승인 후 16:35 발 카타르항공 QR 146 탑승"
+      "🚕 13:30 공항 택시 탑승 ➔ 14:00 BCN T1 도착 (출발 3시간 전 여유 도착)",
+      "📄 DIVA 키오스크에서 바코드 1분 전자 텍스리펀 승인 후 17:00 발 카타르항공 QR 146 탑승"
     ],
     transit: "호텔 ➔ BCN T1 공항 택시 (약 25분) + 카타르항공 QR 146 (도하행)",
     hotel: "기내 1박 (카타르항공 항공기)",
@@ -6734,12 +7013,12 @@ const calendarDaysData = [
     title: "15일차: 도하 환승 ➔ 인천국제공항 도착 (최종 귀국 완료)",
     attractions: ["도하 하마드 공항", "오차드(The Orchard) 실내 열대정원", "카타르항공 QR 858", "인천국제공항 T1"],
     activities: [
-      "🛬 23:55 도하 하마드 공항 도착, 2시간 10분 안락한 환승 대기 (실내 정원 산책 & 면세점)",
-      "✈️ 02:05 발 카타르항공 QR 858 탑승하여 인천으로 귀국 비행",
-      "🇰🇷 17:05 인천국제공항 제1여객터미널 안전 착륙 및 입국 수속",
+      "🛬 00:20 도하 하마드 공항 도착, 3시간 10분 안락한 환승 대기 (실내 정원 산책 & 면세점)",
+      "✈️ 03:30 발 카타르항공 QR 858 탑승하여 인천으로 귀국 비행",
+      "🇰🇷 18:30 인천국제공항 제1여객터미널 안전 착륙 및 입국 수속",
       "🎉 어머니와 함께한 14박 15일 포르투갈 & 스페인 효도 여행 성공적 완료!"
     ],
-    transit: "카타르항공 QR 858 (도하➔인천 8시간 50분)",
+    transit: "카타르항공 QR 858 (도하➔인천 8시간), 도하 3시간 10분 환승 대기",
     hotel: "따뜻한 우리 집",
     motherCare: "도하 공항 평지 무빙워크 및 쾌적한 라운지 휴식, 인천 도착 후 리무진/콜밴 귀가로 귀가 편의 극대화",
     links: [{ reg: 6, day: 15, text: "📱 15일차 귀국 상세 일정표 바로가기 ➔" }]
@@ -6883,11 +7162,12 @@ function selectCalendarDay(dayNum) {
     </div>
     
     <div class="detail-btn-group">
-      ${d.links.map(l => `
-        <button class="btn-go-detail ${l.isSecondary ? 'secondary-btn' : ''}" onclick="goToDay(${l.reg}, ${l.day})">
-          ${l.text}
-        </button>
-      `).join('')}
+      ${d.links.map(l => {
+        if (l.url) {
+          return `<a href="${l.url}" target="_blank" class="btn-go-detail ${l.isSecondary ? 'secondary-btn' : ''}" style="text-decoration:none;">${l.text}</a>`;
+        }
+        return `<button class="btn-go-detail ${l.isSecondary ? 'secondary-btn' : ''}" onclick="goToDay(${l.reg}, ${l.day})">${l.text}</button>`;
+      }).join('')}
     </div>
   `;
 }

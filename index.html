@@ -24,6 +24,7 @@
 }   
   
 * { box-sizing: border-box; margin: 0; padding: 0; }   
+html, body { overflow-x: hidden; width: 100%; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.6; padding-bottom: 60px; }   
   
 header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 22px 18px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.12); position: relative; }   
@@ -67,7 +68,7 @@ border-bottom-color: var(--primary);
 background: #f0f9ff;   
 }   
   
-.container { max-width: 760px; margin: 0 auto; padding: 16px; }   
+.container { max-width: 760px; margin: 0 auto; padding: 16px; width: 100%; box-sizing: border-box; overflow-x: hidden; }   
   
 /* Quick Switch Banner Buttons */   
 .btn-switch-view {   
@@ -577,17 +578,27 @@ line-height: 28px;
 /* ========================================================= */
 /* 🗓️ Travel Calendar & 3-Line Spatial Continuous Styles       */
 /* ========================================================= */
+/* ========================================================= */
+/* Spatial Continuous Styles & Mobile Responsive Calendar    */
+/* ========================================================= */
+/* ========================================================= */
+/* Spatial Continuous Styles & Mobile-Perfect Responsive Cal */
+/* ========================================================= */
 .calendar-section {
   background: #ffffff;
   border: 1.5px solid var(--border-color);
   border-radius: 18px;
-  padding: 18px 12px;
+  padding: 18px 14px;
   margin-bottom: 24px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 @media (max-width: 600px) {
   .calendar-section {
-    padding: 14px 6px;
+    padding: 12px 6px;
     border-radius: 14px;
   }
 }
@@ -609,36 +620,11 @@ line-height: 28px;
   color: var(--text-sub);
   line-height: 1.45;
 }
-.cal-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  -webkit-overflow-scrolling: touch;
+@media (max-width: 600px) {
+  .calendar-header h3 { font-size: 1.08rem; }
+  .calendar-header p { font-size: 0.8rem; line-height: 1.35; }
 }
-.cal-tab-btn {
-  padding: 7px 13px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  border: 1.5px solid var(--border-color);
-  background: #f8fafc;
-  color: var(--text-sub);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-.cal-tab-btn:hover {
-  background: #f1f5f9;
-  color: var(--text-main);
-}
-.cal-tab-btn.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3);
-}
+
 .cal-month-title {
   font-size: 0.98rem;
   font-weight: 900;
@@ -652,9 +638,18 @@ line-height: 28px;
 .cal-month-title:first-child {
   margin-top: 0;
 }
+@media (max-width: 600px) {
+  .cal-month-title {
+    font-size: 0.88rem;
+    margin: 4px 0 6px 0;
+    padding: 0 2px;
+  }
+}
+
+/* 7-Day Grid Container (100% Fit, Zero Overflow) */
 .cal-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
   text-align: center;
   font-size: 0.82rem;
@@ -663,17 +658,32 @@ line-height: 28px;
   margin-bottom: 6px;
   padding: 6px 0;
   border-bottom: 2px solid #e2e8f0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .cal-weekdays span:first-child { color: #ef4444; }
 .cal-weekdays span:last-child { color: #0284c7; }
+
 .cal-days-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
+
 @media (max-width: 600px) {
-  .cal-weekdays { gap: 3px; font-size: 0.78rem; padding: 4px 0; }
-  .cal-days-grid { gap: 3px; }
+  .cal-weekdays {
+    gap: 2px;
+    font-size: 0.72rem;
+    padding: 4px 0;
+    margin-bottom: 4px;
+  }
+  .cal-days-grid {
+    gap: 2px;
+  }
 }
 
 /* Enlarged 3-Line Cell Styling */
@@ -691,12 +701,16 @@ line-height: 28px;
   box-sizing: border-box;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 @media (max-width: 600px) {
   .cal-cell {
-    padding: 5px 2px 4px 2px;
-    min-height: clamp(92px, 14vh, 108px);
-    border-radius: 8px;
+    padding: 3px 2px 3px 2px;
+    min-height: 80px;
+    border-radius: 6px;
+    border-width: 1px;
   }
 }
 .cal-cell.inactive {
@@ -710,6 +724,11 @@ line-height: 28px;
   font-size: 0.88rem;
   font-weight: 600;
 }
+@media (max-width: 600px) {
+  .cal-cell.inactive .cal-date-num {
+    font-size: 0.75rem;
+  }
+}
 .cal-cell.trip-day {
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0,0,0,0.03);
@@ -720,32 +739,50 @@ line-height: 28px;
   border-color: var(--primary);
 }
 .cal-cell.trip-day.selected {
-  border: 2.5px solid var(--primary);
+  border: 2px solid var(--primary);
   background: #f0f9ff;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.28), 0 6px 16px rgba(2, 132, 199, 0.2);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 2.5px rgba(2, 132, 199, 0.28);
+  transform: translateY(-1px);
 }
+
 .cal-date-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  min-width: 0;
   padding: 0 2px;
+  box-sizing: border-box;
 }
 .cal-date-num {
-  font-size: clamp(1rem, 3.4vw, 1.2rem);
+  font-size: clamp(0.96rem, 3.2vw, 1.15rem);
   font-weight: 900;
   color: #0f172a;
   line-height: 1;
 }
 .cal-day-badge {
-  font-size: clamp(0.66rem, 2.2vw, 0.78rem);
+  font-size: clamp(0.64rem, 2.1vw, 0.76rem);
   font-weight: 900;
-  padding: 2px 5px;
+  padding: 2px 4px;
   border-radius: 5px;
   color: white;
   line-height: 1.1;
   letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .cal-date-row {
+    padding: 0 1px;
+  }
+  .cal-date-num {
+    font-size: 0.76rem;
+  }
+  .cal-day-badge {
+    font-size: 0.55rem;
+    padding: 1px 2.5px;
+    border-radius: 3px;
+    letter-spacing: -0.5px;
+  }
 }
 
 /* 3-Line Spatial Layout Inside Cell */
@@ -757,6 +794,8 @@ line-height: 28px;
   margin-top: 4px;
   gap: 3px;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 .cal-slot-line1, .cal-slot-line2 {
   min-height: 22px;
@@ -765,7 +804,9 @@ line-height: 28px;
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-width: 0;
   position: relative;
+  overflow: hidden;
 }
 .cal-slot-line3 {
   min-height: 18px;
@@ -774,6 +815,7 @@ line-height: 28px;
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-width: 0;
   font-size: clamp(0.68rem, 2.3vw, 0.82rem);
   font-weight: 800;
   color: #334155;
@@ -782,11 +824,12 @@ line-height: 28px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 @media (max-width: 600px) {
-  .cal-slot-line1, .cal-slot-line2 { min-height: 20px; height: 20px; }
-  .cal-slot-line3 { min-height: 16px; height: 16px; font-size: 0.65rem; }
-  .cal-slots-container { gap: 2px; }
+  .cal-slots-container { margin-top: 2px; gap: 2px; }
+  .cal-slot-line1, .cal-slot-line2 { min-height: 17px; height: 17px; }
+  .cal-slot-line3 { min-height: 14px; height: 14px; font-size: 0.55rem; letter-spacing: -0.5px; }
 }
 
 /* Continuous City Pill / Line */
@@ -805,12 +848,10 @@ line-height: 28px;
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-@media (max-width: 600px) {
-  .cal-city-pill { font-size: 0.64rem; padding: 0 2px; }
+  min-width: 0;
 }
 
-/* Horizontal Continuity Rules Across Cell Gaps */
+/* Desktop Horizontal Continuity Across Cell Gaps */
 .cal-city-pill.pill-start {
   border-radius: 6px 0 0 6px;
   margin-right: -5px;
@@ -835,13 +876,27 @@ line-height: 28px;
   width: 100%;
   margin: 0;
 }
+
+/* Mobile Strict Containment: Zero Negative Margins, 100% Fit Within Cell */
 @media (max-width: 600px) {
-  .cal-city-pill.pill-start { margin-right: -4px; width: calc(100% + 4px); }
-  .cal-city-pill.pill-mid { margin-left: -4px; margin-right: -4px; width: calc(100% + 8px); }
-  .cal-city-pill.pill-end { margin-left: -4px; width: calc(100% + 4px); }
+  .cal-city-pill,
+  .cal-city-pill.pill-start,
+  .cal-city-pill.pill-mid,
+  .cal-city-pill.pill-end,
+  .cal-city-pill.pill-single {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    border-radius: 3px !important;
+    font-size: 0.58rem !important;
+    font-weight: 800 !important;
+    padding: 0 1px !important;
+    letter-spacing: -0.4px !important;
+    box-shadow: none !important;
+  }
 }
 
-/* City Palette (Matching the Screenshot aesthetic) */
+/* City Palette */
 .pill-lisbon { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
 .pill-porto { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
 .pill-tossa { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
@@ -860,10 +915,17 @@ line-height: 28px;
   margin-top: 18px;
   box-shadow: 0 6px 20px rgba(2, 132, 199, 0.1);
   animation: fadeIn 0.25s ease-in-out;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 600px) {
+  .calendar-detail-card {
+    padding: 14px 10px;
+    border-radius: 12px;
+    margin-top: 14px;
+  }
 }
 .detail-card-header {
   display: flex;
@@ -880,6 +942,7 @@ line-height: 28px;
   border-radius: 20px;
   color: white;
   background: var(--primary);
+  white-space: nowrap;
 }
 .detail-region-tag {
   font-size: 0.86rem;
@@ -888,13 +951,23 @@ line-height: 28px;
   background: #e0f2fe;
   padding: 4px 10px;
   border-radius: 8px;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .detail-day-tag { font-size: 0.84rem; padding: 4px 10px; }
+  .detail-region-tag { font-size: 0.78rem; padding: 3px 8px; }
 }
 .detail-card-title {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 900;
   color: #0f172a;
   line-height: 1.45;
   margin-bottom: 14px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  .detail-card-title { font-size: 1rem; line-height: 1.4; margin-bottom: 10px; }
 }
 .detail-section-box {
   background: #f8fafc;
@@ -902,6 +975,15 @@ line-height: 28px;
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .detail-section-box {
+    padding: 10px 10px;
+    border-radius: 10px;
+  }
 }
 .section-label {
   font-size: 0.84rem;
@@ -916,6 +998,8 @@ line-height: 28px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .attraction-pill {
   background: #ffffff;
@@ -926,6 +1010,13 @@ line-height: 28px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  .attraction-pill { font-size: 0.78rem; padding: 3px 8px; }
 }
 .activities-list {
   list-style: none;
@@ -935,10 +1026,14 @@ line-height: 28px;
   font-size: 0.9rem;
   color: #334155;
   line-height: 1.55;
+  width: 100%;
+  box-sizing: border-box;
 }
 .activities-list li {
   padding-left: 20px;
   position: relative;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .activities-list li::before {
   content: '•';
@@ -949,10 +1044,18 @@ line-height: 28px;
   font-weight: bold;
   line-height: 1.2;
 }
+@media (max-width: 600px) {
+  .activities-list { font-size: 0.82rem; line-height: 1.45; gap: 5px; }
+}
 .detail-meta-text {
   font-size: 0.88rem;
   color: #334155;
   line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  .detail-meta-text { font-size: 0.82rem; line-height: 1.45; }
 }
 .mother-care-box {
   background: #f0fdf4;
@@ -963,11 +1066,25 @@ line-height: 28px;
   font-size: 0.88rem;
   color: #166534;
   line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  .mother-care-box {
+    padding: 10px 10px;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
 }
 .detail-btn-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .btn-go-detail {
   display: flex;
@@ -977,14 +1094,20 @@ line-height: 28px;
   width: 100%;
   background: linear-gradient(135deg, #0284c7, #0369a1);
   color: white;
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 900;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
   transition: all 0.2s ease;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.4;
+  box-sizing: border-box;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .btn-go-detail:hover {
   background: linear-gradient(135deg, #0369a1, #075985);
@@ -998,7 +1121,9 @@ line-height: 28px;
 .btn-go-detail.secondary-btn:hover {
   background: linear-gradient(135deg, #334155, #1e293b);
 }
-
+@media (max-width: 600px) {
+  .btn-go-detail { font-size: 0.88rem; padding: 11px 12px; }
+}
 /* ========================================================= */
 /* 📂 Fixed Expenses Grouped Accordion Styles                */
 /* ========================================================= */
@@ -1171,8 +1296,6 @@ line-height: 28px;
     <h3>🗓️ 14박 15일 여행 캘린더 (2026.09.25 ~ 10.09)</h3>
     <p>달력에서 일정을 탭하면 <b>주요 명소와 하는 일 요약</b>이 바로 표시되며, <b>상세 일정표로 즉시 이동</b>할 수 있습니다.</p>
   </div>
-
-  
 
   <div id="calendarGridContainer"></div>
 
@@ -4204,6 +4327,7 @@ const itineraryData = [
     ]
   },
   {
+    "region": 4,
     "day": 11,
     "date": "10/05 (월)",
     "dayTitle": "11일차: 구엘 공원·그라시아 가우디 외관 & 개선문·시우타델라 공원·그라나다 야간 이동",
@@ -7029,6 +7153,8 @@ let selectedCalendarDay = 1;
 
 function renderCalendar() {
   const container = document.getElementById('calendarGridContainer');
+  if (!container) return;
+  
   let html = `
     <div class="cal-month-title">
       <span>📍 14박 15일 전체 여행 캘린더</span>
@@ -7058,7 +7184,9 @@ function renderCalendar() {
   }
   html += `<div class="cal-cell inactive"><div class="cal-date-num">10</div><div class="cal-slots-container"><div class="cal-slot-line3" style="color:#94a3b8;">귀국후</div></div></div>`;
   
-  html += `</div>`;
+  html += `
+    </div>
+  `;
   container.innerHTML = html;
 }
 
@@ -7112,10 +7240,10 @@ function buildTripCellHtml(dayNum) {
   `;
 }
 
-function selectCalendarDay(dayNum) {
+function selectCalendarDay(dayNum, shouldScroll = true) {
   selectedCalendarDay = dayNum;
   
-  // Highlight cell in calendar
+  // Highlight cell in calendar grid
   document.querySelectorAll('.cal-cell.trip-day').forEach(el => {
     const elDay = parseInt(el.getAttribute('data-day'), 10);
     el.classList.toggle('selected', elDay === dayNum);
@@ -7170,6 +7298,13 @@ function selectCalendarDay(dayNum) {
       }).join('')}
     </div>
   `;
+  
+  if (shouldScroll) {
+    const rect = card.getBoundingClientRect();
+    if (rect.top < 0 || rect.top > window.innerHeight - 80) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 }
 
 function goToDay(regNum, dayNum) {
